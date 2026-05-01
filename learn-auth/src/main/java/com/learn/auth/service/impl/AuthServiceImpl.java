@@ -235,13 +235,13 @@ public class AuthServiceImpl implements AuthService {
     public Result<String> getCaptcha(String uuid) {
         log.info("生成图形验证码: uuid={}", uuid);
 
-        // 1. 生成4位数字验证码
-        String captchaCode = generateCaptchaCode();
-
-        // 2. 使用Hutool生成图形验证码
+        // 1. 使用Hutool生成图形验证码
         // 参数说明：宽120, 高48, 验证码位数4, 干扰圈数量20
+        // CircleCaptcha创建时会自动生成验证码
         CircleCaptcha captcha = CaptchaUtil.createCircleCaptcha(120, 48, 4, 20);
-        captcha.setCode(captchaCode);
+
+        // 2. 获取生成的验证码值
+        String captchaCode = captcha.getCode();
 
         // 3. 将验证码图片转换为Base64编码
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
