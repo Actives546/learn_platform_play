@@ -25,8 +25,8 @@ public class RedisUtil {
 
     @SuppressWarnings("unchecked")
     public <T> T get(String key) {
-        RBucket<Object> bucket = redissonClient.getBucket(key);
-        return (T) bucket.get();
+        RBucket<T> bucket = redissonClient.getBucket(key);
+        return bucket.get();
     }
 
     public boolean exists(String key) {
@@ -49,13 +49,15 @@ public class RedisUtil {
         return bucket.remainTimeToLive();
     }
 
-    public boolean setIfAbsent(String key, Object value) {
-        RBucket<Object> bucket = redissonClient.getBucket(key);
+    public <T> boolean setIfAbsent(String key, T value) {
+        @SuppressWarnings("unchecked")
+        RBucket<T> bucket = (RBucket<T>) redissonClient.getBucket(key);
         return bucket.setIfAbsent(value);
     }
 
-    public boolean setIfAbsent(String key, Object value, long timeout, TimeUnit unit) {
-        RBucket<Object> bucket = redissonClient.getBucket(key);
+    public <T> boolean setIfAbsent(String key, T value, long timeout, TimeUnit unit) {
+        @SuppressWarnings("unchecked")
+        RBucket<T> bucket = (RBucket<T>) redissonClient.getBucket(key);
         return bucket.setIfAbsent(value, timeout, unit);
     }
 }
