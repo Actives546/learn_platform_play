@@ -3,7 +3,7 @@ import { message } from 'antd'
 import { getToken, removeToken } from './token'
 
 const service: AxiosInstance = axios.create({
-  baseURL: '/api',
+  baseURL: 'http://localhost:8080',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
