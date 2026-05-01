@@ -1,0 +1,62 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: learn-gateway
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        namespace: public
+        username: nacos
+        password: nacos
+      config:
+        server-addr: 127.0.0.1:8848
+        namespace: public
+        username: nacos
+        password: nacos
+        file-extension: yaml
+        import-check:
+          enabled: false
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: learn-auth
+          uri: lb://learn-auth
+          predicates:
+            - Path=/auth/**
+          filters:
+            - StripPrefix=1
+    sentinel:
+      transport:
+        dashboard: 127.0.0.1:8080
+        port: 8719
+      eager: true
+
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      password: 
+      database: 0
+      timeout: 10000ms
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.learn: debug
+    org.springframework.cloud.gateway: debug

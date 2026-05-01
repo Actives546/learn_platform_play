@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.learn.auth.mapper.UserMapper">
+
+    <resultMap id="BaseResultMap" type="com.learn.common.entity.User">
+        <id column="id" property="id"/>
+        <result column="user_name" property="userName"/>
+        <result column="password" property="password"/>
+        <result column="nick_name" property="nickName"/>
+        <result column="phone" property="phone"/>
+        <result column="email" property="email"/>
+        <result column="avatar" property="avatar"/>
+        <result column="role_id" property="roleId"/>
+        <result column="status" property="status"/>
+        <result column="salt" property="salt"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="create_by" property="createBy"/>
+        <result column="update_by" property="updateBy"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, user_name, password, nick_name, phone, email, avatar, role_id, status, salt, 
+        create_time, update_time, create_by, update_by
+    </sql>
+
+    <insert id="insert" parameterType="com.learn.common.entity.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user (
+            id, user_name, password, nick_name, phone, email, avatar, 
+            role_id, status, salt, create_time, update_time, create_by, update_by
+        ) VALUES (
+            #{id}, #{userName}, #{password}, #{nickName}, #{phone}, #{email}, #{avatar},
+            #{roleId}, #{status}, #{salt}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy}
+        )
+    </insert>
+
+    <update id="updateById" parameterType="com.learn.common.entity.User">
+        UPDATE user
+        <set>
+            <if test="userName != null">user_name = #{userName},</if>
+            <if test="password != null">password = #{password},</if>
+            <if test="nickName != null">nick_name = #{nickName},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="roleId != null">role_id = #{roleId},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+</mapper>
