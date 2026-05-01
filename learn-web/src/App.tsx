@@ -5,6 +5,10 @@ import Login from '@/pages/Login'
 import Home from '@/pages/Home'
 import { useUserStore } from '@/store/userStore'
 
+const ProtectedRoute = ({ children, isLogin }: { children: React.ReactNode; isLogin: boolean }) => {
+  return isLogin ? <>{children}</> : <Navigate to="/login" replace />
+}
+
 const App = () => {
   const { initAuth, isLogin } = useUserStore()
 
@@ -12,17 +16,13 @@ const App = () => {
     initAuth()
   }, [initAuth])
 
-  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    return isLogin ? <>{children}</> : <Navigate to="/login" replace />
-  }
-
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route
         path="/"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute isLogin={isLogin}>
             <MainLayout />
           </ProtectedRoute>
         }

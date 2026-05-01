@@ -1,3 +1,5 @@
+import type { UserInfo } from '@/api/auth'
+
 const TOKEN_KEY = 'learn_token'
 const USER_INFO_KEY = 'learn_user_info'
 
@@ -13,12 +15,12 @@ export function removeToken(): void {
   localStorage.removeItem(TOKEN_KEY)
 }
 
-export function getUserInfo(): any {
+export function getUserInfo(): UserInfo | null {
   const userInfo = localStorage.getItem(USER_INFO_KEY)
   return userInfo ? JSON.parse(userInfo) : null
 }
 
-export function setUserInfo(userInfo: any): void {
+export function setUserInfo(userInfo: UserInfo): void {
   localStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo))
 }
 

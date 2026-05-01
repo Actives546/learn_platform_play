@@ -1,20 +1,24 @@
 import { useState } from 'react'
 import { Form, Input, Button, Card, Tabs, message } from 'antd'
+import type { TabsProps, FormProps } from 'antd'
 import { UserOutlined, LockOutlined, MailOutlined, PhoneOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { login, register, LoginParams, RegisterParams } from '@/api/auth'
 import { useUserStore } from '@/store/userStore'
 import './index.css'
 
+type LoginFormValues = LoginParams
+type RegisterFormValues = RegisterParams & { confirmPassword: string }
+
 const Login = () => {
   const [activeTab, setActiveTab] = useState('login')
   const [loading, setLoading] = useState(false)
-  const [loginForm] = Form.useForm()
-  const [registerForm] = Form.useForm()
+  const [loginForm] = Form.useForm<LoginFormValues>()
+  const [registerForm] = Form.useForm<RegisterFormValues>()
   const navigate = useNavigate()
   const { setAuth } = useUserStore()
 
-  const handleLogin = async (values: LoginParams) => {
+  const handleLogin: FormProps<LoginFormValues>['onFinish'] = async (values) => {
     setLoading(true)
     try {
       const res = await login(values)
@@ -28,10 +32,11 @@ const Login = () => {
     }
   }
 
-  const handleRegister = async (values: RegisterParams) => {
+  const handleRegister: FormProps<RegisterFormValues>['onFinish'] = async (values) => {
     setLoading(true)
     try {
-      await register(values)
+      const { confirmPassword, ...registerData } = values
+      await register(registerData)
       message.success('注册成功，请登录')
       setActiveTab('login')
       registerForm.resetFields()
@@ -42,7 +47,7 @@ const Login = () => {
     }
   }
 
-  const loginItems = [
+  const loginItems: TabsProps['items'] = [
     {
       key: 'login',
       label: '登录',

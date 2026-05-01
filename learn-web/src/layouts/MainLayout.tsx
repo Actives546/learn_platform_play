@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Layout, Menu, Dropdown, Avatar, Button } from 'antd'
+import type { MenuProps } from 'antd'
 import {
   HomeOutlined,
   BookOutlined,
@@ -43,7 +44,7 @@ const MainLayout = () => {
     }
   }
 
-  const menuItems = [
+  const menuItems: MenuProps['items'] = [
     {
       key: '/',
       icon: <HomeOutlined />,
@@ -66,7 +67,7 @@ const MainLayout = () => {
     },
   ]
 
-  const userMenuItems = [
+  const userMenuItems: MenuProps['items'] = [
     {
       key: 'profile',
       icon: <UserOutlined />,
@@ -78,18 +79,23 @@ const MainLayout = () => {
       label: '设置',
     },
     {
-      type: 'divider' as const,
+      type: 'divider',
     },
     {
       key: 'logout',
       icon: <LogoutOutlined />,
       label: '退出登录',
-      onClick: handleLogout,
     },
   ]
 
-  const handleMenuClick = ({ key }: { key: string }) => {
+  const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
     navigate(key)
+  }
+
+  const handleUserMenuClick: MenuProps['onClick'] = ({ key }) => {
+    if (key === 'logout') {
+      handleLogout()
+    }
   }
 
   return (
@@ -134,7 +140,7 @@ const MainLayout = () => {
             }}
           />
           <div className="header-title">智能在线学习平台</div>
-          <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+          <Dropdown menu={{ items: userMenuItems, onClick: handleUserMenuClick }} placement="bottomRight">
             <div className="header-user">
               <Avatar icon={<UserOutlined />} />
               <span>{userInfo?.nickName || userInfo?.userName || '用户'}</span>

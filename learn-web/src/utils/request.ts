@@ -13,7 +13,7 @@ const service: AxiosInstance = axios.create({
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getToken()
-    if (token) {
+    if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
     }
     return config
@@ -64,25 +64,25 @@ service.interceptors.response.use(
   }
 )
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   code: number
   message: string
   data: T
 }
 
-export function get<T = any>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+export function get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
   return service.get(url, config)
 }
 
-export function post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+export function post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
   return service.post(url, data, config)
 }
 
-export function put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+export function put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
   return service.put(url, data, config)
 }
 
-export function del<T = any>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+export function del<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
   return service.delete(url, config)
 }
 
