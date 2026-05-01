@@ -5,6 +5,7 @@ import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -58,6 +59,6 @@ public class RedisUtil {
     public <T> boolean setIfAbsent(String key, T value, long timeout, TimeUnit unit) {
         @SuppressWarnings("unchecked")
         RBucket<T> bucket = (RBucket<T>) redissonClient.getBucket(key);
-        return bucket.setIfAbsent(value, timeout, unit);
+        return bucket.setIfAbsent(value, Duration.ofMillis(unit.toMillis(timeout)));
     }
 }
