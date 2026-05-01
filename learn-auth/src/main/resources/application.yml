@@ -24,7 +24,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/learn_platform?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: root
+    password: 123456
     druid:
       initial-size: 5
       min-idle: 5
@@ -43,7 +43,7 @@ spring:
     redis:
       host: 127.0.0.1
       port: 6379
-      password: 
+      password: 123456
       database: 1
       timeout: 10000ms
 
