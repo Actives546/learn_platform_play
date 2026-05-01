@@ -4,13 +4,12 @@ import com.alibaba.fastjson.JSON;
 import com.learn.common.constant.CommonConstant;
 import com.learn.common.result.Result;
 import com.learn.common.util.JwtUtil;
-import com.learn.common.util.RedisUtil;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -28,10 +27,9 @@ import java.util.List;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
-    private final RedisUtil redisUtil;
+    private final ReactiveStringRedisTemplate reactiveStringRedisTemplate;
 
     private static final List<String> EXCLUDE_URLS = Arrays.asList(
             "/auth/login",
@@ -41,6 +39,10 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     );
 
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
+
+    public AuthGlobalFilter(ReactiveStringRedisTemplate reactiveStringRedisTemplate) {
+        this.reactiveStringRedisTemplate = reactiveStringRedisTemplate;
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -68,16 +70,23 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             Long userId = JwtUtil.getUserId(token);
             String redisKey = CommonConstant.LOGIN_USER_KEY + userId;
 
-            if (!redisUtil.exists(redisKey)) {
-                return unauthorizedResponse(response, "登录已过期，请重新登录");
-            }
+            return reactiveStringRedisTemplate.hasKey(redisKey)
+                    .flatMap(exists -> {
+                        if (!exists) {
+                            return unauthorizedResponse(response, "登录已过期，请重新登录");
+                        }
 
-            ServerHttpRequest newRequest = request.mutate()
-                    .header(CommonConstant.USER_ID, String.valueOf(userId))
-                    .header(CommonConstant.USER_NAME, JwtUtil.getUserName(token))
-                    .build();
+                        ServerHttpRequest newRequest = request.mutate()
+                                .header(CommonConstant.USER_ID, String.valueOf(userId))
+                                .header(CommonConstant.USER_NAME, JwtUtil.getUserName(token))
+                                .build();
 
-            return chain.filter(exchange.mutate().request(newRequest).build());
+                        return chain.filter(exchange.mutate().request(newRequest).build());
+                    })
+                    .onErrorResume(e -> {
+                        log.error("token验证失败: {}", e.getMessage());
+                        return unauthorizedResponse(response, "token验证失败");
+                    });
         } catch (Exception e) {
             log.error("token解析失败: {}", e.getMessage());
             return unauthorizedResponse(response, "token解析失败");
