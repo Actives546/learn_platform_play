@@ -92,7 +92,7 @@ export const getMenuList = (): Promise<ApiResponse<Menu[]>> => {
  * @returns 分页结果
  */
 export const getMenuPage = (params?: MenuPageParams): Promise<ApiResponse<PageResult<Menu>>> => {
-  return get<PageResult<Menu>>('/menu/page', params)
+  return get<PageResult<Menu>>('/menu/page', { params })
 }
 
 /**
