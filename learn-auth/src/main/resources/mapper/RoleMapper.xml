@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.learn.auth.mapper.RoleMapper">
+
+    <resultMap id="BaseResultMap" type="com.learn.common.entity.Role">
+        <id column="id" property="id"/>
+        <result column="role_name" property="roleName"/>
+        <result column="role_code" property="roleCode"/>
+        <result column="description" property="description"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, role_name, role_code, description, status, create_time, update_time
+    </sql>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM role
+        ORDER BY create_time ASC
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM role
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.learn.common.entity.Role" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO role (
+            id, role_name, role_code, description, status, create_time, update_time
+        ) VALUES (
+            #{id}, #{roleName}, #{roleCode}, #{description}, #{status}, #{createTime}, #{updateTime}
+        )
+    </insert>
+
+    <update id="updateById" parameterType="com.learn.common.entity.Role">
+        UPDATE role
+        <set>
+            <if test="roleName != null">role_name = #{roleName},</if>
+            <if test="roleCode != null">role_code = #{roleCode},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM role
+        WHERE id = #{id}
+    </delete>
+
+    <select id="countTotal" resultType="long">
+        SELECT COUNT(*)
+        FROM role
+        <where>
+            <if test="roleName != null and roleName != ''">
+                AND role_name LIKE CONCAT('%', #{roleName}, '%')
+            </if>
+        </where>
+    </select>
+
+    <select id="selectPage" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM role
+        <where>
+            <if test="roleName != null and roleName != ''">
+                AND role_name LIKE CONCAT('%', #{roleName}, '%')
+            </if>
+        </where>
+        ORDER BY create_time ASC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="selectMenuIdsByRoleId" resultType="java.lang.Long">
+        SELECT menu_id
+        FROM role_menu
+        WHERE role_id = #{roleId}
+    </select>
+
+</mapper>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.learn.auth.mapper.RoleMenuMapper">
+
+    <resultMap id="BaseResultMap" type="com.learn.common.entity.RoleMenu">
+        <id column="id" property="id"/>
+        <result column="role_id" property="roleId"/>
+        <result column="menu_id" property="menuId"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, role_id, menu_id, create_time
+    </sql>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO role_menu (role_id, menu_id, create_time) VALUES
+        <foreach collection="roleMenus" item="item" separator=",">
+            (#{item.roleId}, #{item.menuId}, #{item.createTime})
+        </foreach>
+    </insert>
+
+    <delete id="deleteByRoleId">
+        DELETE FROM role_menu
+        WHERE role_id = #{roleId}
+    </delete>
+
+    <delete id="deleteByMenuId">
+        DELETE FROM role_menu
+        WHERE menu_id = #{menuId}
+    </delete>
+
+    <select id="selectMenuIdsByRoleId" resultType="java.lang.Long">
+        SELECT menu_id
+        FROM role_menu
+        WHERE role_id = #{roleId}
+    </select>
+
+</mapper>
