@@ -81,3 +81,26 @@ body {
   min-height: calc(100vh - 112px);
   border-radius: 8px;
 }
+
+.empty-page {
+  width: 100%;
+}
+
+.profile-page {
+  width: 100%;
+}
+
+.profile-page .ant-card {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.ant-menu-dark .ant-menu-item-selected,
+.ant-menu-dark .ant-menu-submenu-selected {
+  background-color: #1890ff !important;
+}
+
+.ant-menu-dark .ant-menu-item:hover,
+.ant-menu-dark .ant-menu-submenu-title:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}

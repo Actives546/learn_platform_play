@@ -40,6 +40,9 @@ export interface UserInfo {
   nickName: string
   avatar: string
   roleId: number
+  phone?: string
+  email?: string
+  status?: number
 }
 
 /**
