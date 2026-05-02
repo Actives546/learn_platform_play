@@ -212,7 +212,7 @@ const MainLayout = () => {
           onClick={handleMenuClick}
         />
       </Sider>
-      <Layout className={collapsed ? 'collapsed' : ''}>
+      <Layout>
         <Header className="layout-header">
           <Button
             type="text"
