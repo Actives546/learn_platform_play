@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Card,
   List,
@@ -46,7 +46,6 @@ const RoleManagementPage = () => {
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
   const [treeData, setTreeData] = useState<any[]>([])
   const [checkedKeys, setCheckedKeys] = useState<React.Key[]>([])
-  const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([])
   const [roleLoading, setRoleLoading] = useState(false)
   const [menuLoading, setMenuLoading] = useState(false)
   const [grantLoading, setGrantLoading] = useState(false)
@@ -54,14 +53,14 @@ const RoleManagementPage = () => {
   const [modalTitle, setModalTitle] = useState('新增角色')
   const [editingRole, setEditingRole] = useState<Role | null>(null)
   const [form] = Form.useForm()
+  const hasInitRef = useRef(false)
 
-  const buildTreeData = useCallback((menus: Menu[]) => {
-    const childrenMap = new Map<number, any[]>()
-    const allKeys: React.Key[] = []
+  const buildTreeData = (menus: Menu[]) => {
+    const nodeMap = new Map<number, any>()
 
+    // 先创建所有节点
     menus.forEach(menu => {
-      allKeys.push(menu.id)
-      const node = {
+      nodeMap.set(menu.id, {
         key: menu.id,
         title: (
           <span>
@@ -75,27 +74,29 @@ const RoleManagementPage = () => {
         ),
         disabled: menu.status === 0,
         children: [],
-      }
-      if (!childrenMap.has(menu.parentId)) {
-        childrenMap.set(menu.parentId, [])
-      }
-      childrenMap.get(menu.parentId)!.push(node)
+      })
     })
 
-    const buildTree = (parentId: number): any[] => {
-      const children = childrenMap.get(parentId) || []
-      return children.map(child => ({
-        ...child,
-        children: buildTree(child.key),
-      }))
-    }
+    // 再按 parentId 组装树
+    const roots: any[] = []
+    menus.forEach(menu => {
+      const node = nodeMap.get(menu.id)!
+      if (menu.parentId === 0) {
+        roots.push(node)
+      } else {
+        const parent = nodeMap.get(menu.parentId)
+        if (parent) {
+          parent.children.push(node)
+        } else {
+          roots.push(node)
+        }
+      }
+    })
 
-    const result = buildTree(0)
-    setTreeData(result)
-    setExpandedKeys(allKeys)
-  }, [])
+    setTreeData(roots)
+  }
 
-  const fetchMenuList = useCallback(async () => {
+  const fetchMenuList = async () => {
     setMenuLoading(true)
     try {
       const res = await getMenuList()
@@ -108,9 +109,9 @@ const RoleManagementPage = () => {
     } finally {
       setMenuLoading(false)
     }
-  }, [buildTreeData])
+  }
 
-  const fetchRoleMenuIds = useCallback(async (roleId: number) => {
+  const fetchRoleMenuIds = async (roleId: number) => {
     try {
       const res = await getRoleMenuIds(roleId)
       if (res.code === 200 && res.data) {
@@ -122,14 +123,18 @@ const RoleManagementPage = () => {
       console.error('获取角色菜单ID失败:', error)
       setCheckedKeys([])
     }
-  }, [])
+  }
 
-  const fetchRoleList = useCallback(async () => {
+  const fetchRoleList = async () => {
     setRoleLoading(true)
     try {
       const res = await getRoleList()
       if (res.code === 200 && res.data) {
         setRoleList(res.data)
+        // 数据加载完成后自动选中第一个角色
+        if (res.data.length > 0) {
+          setSelectedRole(res.data[0])
+        }
       }
     } catch (error) {
       console.error('获取角色列表失败:', error)
@@ -137,27 +142,24 @@ const RoleManagementPage = () => {
     } finally {
       setRoleLoading(false)
     }
+  }
+
+  // 只执行一次的初始化加载
+  useEffect(() => {
+    if (hasInitRef.current) return
+    hasInitRef.current = true
+    fetchMenuList()
+    fetchRoleList()
   }, [])
 
-  useEffect(() => {
-    fetchMenuList()
-  }, [fetchMenuList])
+  // selectedRole 变化时加载其关联的菜单权限
+  const selectedRoleId = selectedRole?.id
 
   useEffect(() => {
-    fetchRoleList()
-  }, [fetchRoleList])
-
-  useEffect(() => {
-    if (roleList.length > 0 && !selectedRole) {
-      setSelectedRole(roleList[0])
+    if (selectedRoleId) {
+      fetchRoleMenuIds(selectedRoleId)
     }
-  }, [roleList, selectedRole])
-
-  useEffect(() => {
-    if (selectedRole) {
-      fetchRoleMenuIds(selectedRole.id)
-    }
-  }, [selectedRole?.id, fetchRoleMenuIds])
+  }, [selectedRoleId])
 
   const handleRoleSelect = (role: Role) => {
     if (selectedRole?.id !== role.id) {
@@ -168,10 +170,6 @@ const RoleManagementPage = () => {
   const handleCheck = (checkedKeysValue: any, _info: any) => {
     const keys = Array.isArray(checkedKeysValue) ? checkedKeysValue : checkedKeysValue.checked
     setCheckedKeys(keys || [])
-  }
-
-  const handleExpand = (expandedKeysValue: React.Key[]) => {
-    setExpandedKeys(expandedKeysValue)
   }
 
   const handleGrantMenus = async () => {
@@ -416,11 +414,9 @@ const RoleManagementPage = () => {
                   <Tree
                     checkable
                     checkedKeys={checkedKeys}
-                    expandedKeys={expandedKeys}
+                    defaultExpandAll
                     onCheck={handleCheck}
-                    onExpand={handleExpand}
                     treeData={treeData}
-                    height={500}
                     className="menu-tree"
                     checkStrictly
                   />
