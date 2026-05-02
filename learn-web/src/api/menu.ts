@@ -51,6 +51,26 @@ export interface MenuForm {
 }
 
 /**
+ * 分页结果
+ */
+export interface PageResult<T> {
+  total: number
+  records: T[]
+  pageNum: number
+  pageSize: number
+  pages: number
+}
+
+/**
+ * 分页查询参数
+ */
+export interface MenuPageParams {
+  menuName?: string
+  pageNum?: number
+  pageSize?: number
+}
+
+/**
  * 获取菜单树
  * @returns 菜单树列表
  */
@@ -64,6 +84,15 @@ export const getMenuTree = (): Promise<ApiResponse<Menu[]>> => {
  */
 export const getMenuList = (): Promise<ApiResponse<Menu[]>> => {
   return get<Menu[]>('/menu/list')
+}
+
+/**
+ * 分页查询菜单列表
+ * @param params 查询参数
+ * @returns 分页结果
+ */
+export const getMenuPage = (params?: MenuPageParams): Promise<ApiResponse<PageResult<Menu>>> => {
+  return get<PageResult<Menu>>('/menu/page', params)
 }
 
 /**

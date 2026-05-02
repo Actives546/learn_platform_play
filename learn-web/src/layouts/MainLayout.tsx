@@ -187,6 +187,8 @@ const MainLayout = () => {
         collapsible
         collapsed={collapsed}
         className="layout-sider"
+        width={200}
+        collapsedWidth={80}
       >
         <div style={{
           height: 64,
@@ -210,7 +212,7 @@ const MainLayout = () => {
           onClick={handleMenuClick}
         />
       </Sider>
-      <Layout>
+      <Layout className={collapsed ? 'collapsed' : ''}>
         <Header className="layout-header">
           <Button
             type="text"

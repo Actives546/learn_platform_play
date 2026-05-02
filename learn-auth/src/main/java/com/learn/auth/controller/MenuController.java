@@ -2,6 +2,7 @@ package com.learn.auth.controller;
 
 import com.learn.auth.service.MenuService;
 import com.learn.common.entity.Menu;
+import com.learn.common.result.PageResult;
 import com.learn.common.result.Result;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +47,24 @@ public class MenuController {
     public Result<List<Menu>> getMenuList() {
         log.info("收到获取菜单列表请求");
         return menuService.getMenuList();
+    }
+
+    /**
+     * 分页查询菜单列表接口
+     * 支持按菜单名称模糊查询
+     *
+     * @param menuName 菜单名称（可选，模糊查询）
+     * @param pageNum  页码（可选，默认1）
+     * @param pageSize 每页大小（可选，默认10）
+     * @return 分页结果
+     */
+    @GetMapping("/page")
+    public Result<PageResult<Menu>> getMenuPage(
+            @RequestParam(required = false) String menuName,
+            @RequestParam(required = false, defaultValue = "1") Integer pageNum,
+            @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
+        log.info("收到分页查询菜单列表请求: menuName={}, pageNum={}, pageSize={}", menuName, pageNum, pageSize);
+        return menuService.getMenuPage(menuName, pageNum, pageSize);
     }
 
     /**

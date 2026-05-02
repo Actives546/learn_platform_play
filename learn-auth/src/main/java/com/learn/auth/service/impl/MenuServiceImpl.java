@@ -4,6 +4,7 @@ import com.learn.auth.mapper.MenuMapper;
 import com.learn.auth.service.MenuService;
 import com.learn.common.entity.Menu;
 import com.learn.common.exception.BusinessException;
+import com.learn.common.result.PageResult;
 import com.learn.common.result.Result;
 import com.learn.common.util.IdGenerator;
 import lombok.RequiredArgsConstructor;
@@ -66,6 +67,43 @@ public class MenuServiceImpl implements MenuService {
         log.info("查询到菜单总数: {}", menus.size());
         
         return Result.success("获取菜单列表成功", menus);
+    }
+
+    /**
+     * 分页查询菜单列表
+     *
+     * @param menuName 菜单名称（模糊查询）
+     * @param pageNum  页码
+     * @param pageSize 每页大小
+     * @return 分页结果
+     */
+    @Override
+    public Result<PageResult<Menu>> getMenuPage(String menuName, Integer pageNum, Integer pageSize) {
+        log.info("分页查询菜单列表: menuName={}, pageNum={}, pageSize={}", menuName, pageNum, pageSize);
+        
+        // 设置默认值
+        if (pageNum == null || pageNum <= 0) {
+            pageNum = 1;
+        }
+        if (pageSize == null || pageSize <= 0) {
+            pageSize = 10;
+        }
+        
+        // 计算偏移量
+        int offset = (pageNum - 1) * pageSize;
+        
+        // 查询总数
+        long total = menuMapper.countTotal(menuName);
+        log.info("查询到菜单总数: {}", total);
+        
+        // 分页查询数据
+        List<Menu> menus = menuMapper.selectPage(menuName, offset, pageSize);
+        log.info("分页查询到菜单数量: {}", menus.size());
+        
+        // 构建分页结果
+        PageResult<Menu> pageResult = PageResult.of(total, menus, pageNum, pageSize);
+        
+        return Result.success("分页查询菜单列表成功", pageResult);
     }
 
     /**
