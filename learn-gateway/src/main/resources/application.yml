@@ -21,6 +21,10 @@ spring:
             - Path=/auth/**
           filters:
             - StripPrefix=1
+        - id: learn-menu
+          uri: lb://learn-auth
+          predicates:
+            - Path=/menu/**
   data:
     redis:
       host: 127.0.0.1

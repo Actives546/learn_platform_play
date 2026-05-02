@@ -26,7 +26,50 @@ import {
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useUserStore } from '@/store/userStore'
 import { logout } from '@/api/auth'
+import { getMenuTree, Menu as MenuType } from '@/api/menu'
 import { message } from 'antd'
+
+const iconMap: Record<string, React.ReactNode> = {
+  HomeOutlined: <HomeOutlined />,
+  BookOutlined: <BookOutlined />,
+  TeamOutlined: <TeamOutlined />,
+  ScheduleOutlined: <ScheduleOutlined />,
+  BarChartOutlined: <BarChartOutlined />,
+  AppstoreOutlined: <AppstoreOutlined />,
+  UserOutlined: <UserOutlined />,
+  SettingOutlined: <SettingOutlined />,
+  LogoutOutlined: <LogoutOutlined />,
+  SolutionOutlined: <SolutionOutlined />,
+  QuestionCircleOutlined: <QuestionCircleOutlined />,
+  FileTextOutlined: <FileTextOutlined />,
+  TrophyOutlined: <TrophyOutlined />,
+  SafetyOutlined: <SafetyOutlined />,
+  PieChartOutlined: <PieChartOutlined />,
+  LineChartOutlined: <LineChartOutlined />,
+  UnorderedListOutlined: <UnorderedListOutlined />,
+  SafetyCertificateOutlined: <SafetyCertificateOutlined />,
+}
+
+const getIcon = (iconName?: string): React.ReactNode => {
+  if (!iconName) return undefined
+  return iconMap[iconName] || <AppstoreOutlined />
+}
+
+const convertMenuToAntd = (menus: MenuType[]): MenuProps['items'] => {
+  return menus
+    .filter(menu => menu.menuType !== 3)
+    .map(menu => {
+      const item: MenuProps['items'][number] = {
+        key: menu.path || `menu-${menu.id}`,
+        icon: getIcon(menu.icon),
+        label: menu.menuName,
+      }
+      if (menu.children && menu.children.length > 0) {
+        item.children = convertMenuToAntd(menu.children)
+      }
+      return item
+    })
+}
 
 const { Header, Sider, Content } = Layout
 
@@ -40,10 +83,24 @@ const getOpenKeys = (pathname: string): string[] => {
 
 const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false)
+  const [menuItems, setMenuItems] = useState<MenuProps['items']>([])
   const navigate = useNavigate()
   const location = useLocation()
   const { userInfo, clearAuth, initAuth, isLogin } = useUserStore()
   const [openKeys, setOpenKeys] = useState<string[]>(getOpenKeys(location.pathname))
+
+  const fetchMenuTree = async () => {
+    try {
+      const res = await getMenuTree()
+      if (res.code === 200 && res.data) {
+        const antdMenuItems = convertMenuToAntd(res.data)
+        setMenuItems(antdMenuItems)
+      }
+    } catch (error) {
+      console.error('获取菜单树失败:', error)
+      message.error('获取菜单失败，请刷新页面重试')
+    }
+  }
 
   useEffect(() => {
     initAuth()
@@ -52,6 +109,8 @@ const MainLayout = () => {
   useEffect(() => {
     if (!isLogin && location.pathname !== '/login') {
       navigate('/login')
+    } else if (isLogin) {
+      fetchMenuTree()
     }
   }, [isLogin, location.pathname, navigate])
 
@@ -78,118 +137,7 @@ const MainLayout = () => {
     }
   }
 
-  const menuItems: MenuProps['items'] = [
-    {
-      key: '/',
-      icon: <HomeOutlined />,
-      label: '首页',
-    },
-    {
-      key: '/teaching',
-      icon: <BookOutlined />,
-      label: '教学管理',
-      children: [
-        {
-          key: '/teaching/course',
-          icon: <UnorderedListOutlined />,
-          label: '课程列表',
-        },
-        {
-          key: '/teaching/chapter',
-          icon: <FileTextOutlined />,
-          label: '章节管理',
-        },
-        {
-          key: '/teaching/question',
-          icon: <QuestionCircleOutlined />,
-          label: '题库管理',
-        },
-        {
-          key: '/teaching/plan',
-          icon: <ScheduleOutlined />,
-          label: '教学计划',
-        },
-      ],
-    },
-    {
-      key: '/personnel',
-      icon: <TeamOutlined />,
-      label: '人员管理',
-      children: [
-        {
-          key: '/personnel/student',
-          icon: <UserOutlined />,
-          label: '学生管理',
-        },
-        {
-          key: '/personnel/teacher',
-          icon: <SolutionOutlined />,
-          label: '老师管理',
-        },
-      ],
-    },
-    {
-      key: '/progress',
-      icon: <LineChartOutlined />,
-      label: '学习进度',
-      children: [
-        {
-          key: '/progress/study',
-          icon: <LineChartOutlined />,
-          label: '学习进度',
-        },
-        {
-          key: '/progress/certificate',
-          icon: <SafetyCertificateOutlined />,
-          label: '证书管理',
-        },
-        {
-          key: '/progress/study-plan',
-          icon: <ScheduleOutlined />,
-          label: '学习计划',
-        },
-      ],
-    },
-    {
-      key: '/analysis',
-      icon: <BarChartOutlined />,
-      label: '数据分析',
-      children: [
-        {
-          key: '/analysis/statistics',
-          icon: <PieChartOutlined />,
-          label: '学习统计',
-        },
-        {
-          key: '/analysis/ranking',
-          icon: <TrophyOutlined />,
-          label: '课程排行',
-        },
-        {
-          key: '/analysis/score',
-          icon: <BarChartOutlined />,
-          label: '成绩分析',
-        },
-      ],
-    },
-    {
-      key: '/menu',
-      icon: <AppstoreOutlined />,
-      label: '菜单管理',
-      children: [
-        {
-          key: '/menu/management',
-          icon: <UnorderedListOutlined />,
-          label: '菜单管理',
-        },
-        {
-          key: '/menu/role',
-          icon: <SafetyOutlined />,
-          label: '角色授权管理',
-        },
-      ],
-    },
-  ]
+
 
   const userMenuItems: MenuProps['items'] = [
     {
