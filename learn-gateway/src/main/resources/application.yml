@@ -9,15 +9,11 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: 127.0.0.1:8848
+        server-addr: 198.18.0.1:8848
         namespace: public
         username: nacos
         password: nacos
     gateway:
-      discovery:
-        locator:
-          enabled: true
-          lower-case-service-id: true
       routes:
         - id: learn-auth
           uri: lb://learn-auth
