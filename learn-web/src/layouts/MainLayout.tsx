@@ -4,11 +4,24 @@ import type { MenuProps } from 'antd'
 import {
   HomeOutlined,
   BookOutlined,
+  TeamOutlined,
+  ScheduleOutlined,
+  BarChartOutlined,
+  AppstoreOutlined,
   UserOutlined,
   SettingOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  SolutionOutlined,
+  QuestionCircleOutlined,
+  FileTextOutlined,
+  TrophyOutlined,
+  SafetyOutlined,
+  PieChartOutlined,
+  LineChartOutlined,
+  UnorderedListOutlined,
+  SafetyCertificateOutlined,
 } from '@ant-design/icons'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useUserStore } from '@/store/userStore'
@@ -17,11 +30,20 @@ import { message } from 'antd'
 
 const { Header, Sider, Content } = Layout
 
+const getOpenKeys = (pathname: string): string[] => {
+  const paths = pathname.split('/').filter(Boolean)
+  if (paths.length > 1) {
+    return [`/${paths[0]}`]
+  }
+  return []
+}
+
 const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const { userInfo, clearAuth, initAuth, isLogin } = useUserStore()
+  const [openKeys, setOpenKeys] = useState<string[]>(getOpenKeys(location.pathname))
 
   useEffect(() => {
     initAuth()
@@ -32,6 +54,18 @@ const MainLayout = () => {
       navigate('/login')
     }
   }, [isLogin, location.pathname, navigate])
+
+  useEffect(() => {
+    setOpenKeys(getOpenKeys(location.pathname))
+  }, [location.pathname])
+
+  const handleOpenChange: MenuProps['onOpenChange'] = (keys) => {
+    if (keys.length > 0) {
+      setOpenKeys([keys[keys.length - 1]])
+    } else {
+      setOpenKeys([])
+    }
+  }
 
   const handleLogout = async () => {
     try {
@@ -51,19 +85,109 @@ const MainLayout = () => {
       label: '首页',
     },
     {
-      key: '/course',
+      key: '/teaching',
       icon: <BookOutlined />,
-      label: '课程管理',
+      label: '教学管理',
+      children: [
+        {
+          key: '/teaching/course',
+          icon: <UnorderedListOutlined />,
+          label: '课程列表',
+        },
+        {
+          key: '/teaching/chapter',
+          icon: <FileTextOutlined />,
+          label: '章节管理',
+        },
+        {
+          key: '/teaching/question',
+          icon: <QuestionCircleOutlined />,
+          label: '题库管理',
+        },
+        {
+          key: '/teaching/plan',
+          icon: <ScheduleOutlined />,
+          label: '教学计划',
+        },
+      ],
     },
     {
-      key: '/user',
-      icon: <UserOutlined />,
-      label: '用户管理',
+      key: '/personnel',
+      icon: <TeamOutlined />,
+      label: '人员管理',
+      children: [
+        {
+          key: '/personnel/student',
+          icon: <UserOutlined />,
+          label: '学生管理',
+        },
+        {
+          key: '/personnel/teacher',
+          icon: <SolutionOutlined />,
+          label: '老师管理',
+        },
+      ],
     },
     {
-      key: '/setting',
-      icon: <SettingOutlined />,
-      label: '系统设置',
+      key: '/progress',
+      icon: <LineChartOutlined />,
+      label: '学习进度',
+      children: [
+        {
+          key: '/progress/study',
+          icon: <LineChartOutlined />,
+          label: '学习进度',
+        },
+        {
+          key: '/progress/certificate',
+          icon: <SafetyCertificateOutlined />,
+          label: '证书管理',
+        },
+        {
+          key: '/progress/study-plan',
+          icon: <ScheduleOutlined />,
+          label: '学习计划',
+        },
+      ],
+    },
+    {
+      key: '/analysis',
+      icon: <BarChartOutlined />,
+      label: '数据分析',
+      children: [
+        {
+          key: '/analysis/statistics',
+          icon: <PieChartOutlined />,
+          label: '学习统计',
+        },
+        {
+          key: '/analysis/ranking',
+          icon: <TrophyOutlined />,
+          label: '课程排行',
+        },
+        {
+          key: '/analysis/score',
+          icon: <BarChartOutlined />,
+          label: '成绩分析',
+        },
+      ],
+    },
+    {
+      key: '/menu',
+      icon: <AppstoreOutlined />,
+      label: '菜单管理',
+      children: [
+        {
+          key: '/menu/management',
+          icon: <UnorderedListOutlined />,
+          label: '菜单管理',
+        },
+        {
+          key: '/menu/role',
+          icon: <SafetyOutlined />,
+          label: '角色授权管理',
+        },
+      ],
     },
   ]
 
@@ -95,6 +219,10 @@ const MainLayout = () => {
   const handleUserMenuClick: MenuProps['onClick'] = ({ key }) => {
     if (key === 'logout') {
       handleLogout()
+    } else if (key === 'profile') {
+      navigate('/profile')
+    } else if (key === 'setting') {
+      navigate('/setting')
     }
   }
 
@@ -122,6 +250,8 @@ const MainLayout = () => {
           theme="dark"
           mode="inline"
           selectedKeys={[location.pathname]}
+          openKeys={openKeys}
+          onOpenChange={handleOpenChange}
           items={menuItems}
           onClick={handleMenuClick}
         />
