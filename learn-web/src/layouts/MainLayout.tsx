@@ -84,6 +84,7 @@ const getOpenKeys = (pathname: string): string[] => {
 const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false)
   const [menuItems, setMenuItems] = useState<MenuProps['items']>([])
+  const [authLoading, setAuthLoading] = useState(true)
   const navigate = useNavigate()
   const location = useLocation()
   const { userInfo, clearAuth, initAuth, isLogin } = useUserStore()
@@ -104,15 +105,20 @@ const MainLayout = () => {
 
   useEffect(() => {
     initAuth()
+    setAuthLoading(false)
   }, [initAuth])
 
   useEffect(() => {
+    if (authLoading) {
+      return
+    }
+
     if (!isLogin && location.pathname !== '/login') {
       navigate('/login')
     } else if (isLogin) {
       fetchMenuTree()
     }
-  }, [isLogin, location.pathname, navigate])
+  }, [isLogin, location.pathname, navigate, authLoading])
 
   useEffect(() => {
     setOpenKeys(getOpenKeys(location.pathname))
