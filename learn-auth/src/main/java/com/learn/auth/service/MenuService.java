@@ -1,6 +1,7 @@
 package com.learn.auth.service;
 
 import com.learn.common.entity.Menu;
+import com.learn.common.result.PageResult;
 import com.learn.common.result.Result;
 
 import java.util.List;
@@ -27,6 +28,16 @@ public interface MenuService {
      * @return 菜单列表
      */
     Result<List<Menu>> getMenuList();
+
+    /**
+     * 分页查询菜单列表
+     *
+     * @param menuName 菜单名称（模糊查询）
+     * @param pageNum  页码
+     * @param pageSize 每页大小
+     * @return 分页结果
+     */
+    Result<PageResult<Menu>> getMenuPage(String menuName, Integer pageNum, Integer pageSize);
 
     /**
      * 根据ID获取菜单详情

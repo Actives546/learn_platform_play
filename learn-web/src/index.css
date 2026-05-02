@@ -44,7 +44,8 @@ body {
 }
 
 .layout-main {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .layout-header {
@@ -54,6 +55,12 @@ body {
   padding: 0 24px;
   background: #001529;
   color: white;
+  height: 64px;
+  line-height: 64px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .header-title {
@@ -72,14 +79,69 @@ body {
 
 .layout-sider {
   background: #001529;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.layout-sider .ant-menu {
+  height: calc(100vh - 64px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.layout-sider .ant-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.layout-sider .ant-menu::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.layout-sider .ant-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.layout-main .ant-layout {
+  margin-left: 200px;
+  transition: margin-left 0.2s;
+}
+
+.layout-main .ant-layout.collapsed {
+  margin-left: 80px;
+}
+
+.layout-main .ant-layout-content {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .layout-content {
   margin: 24px;
   padding: 24px;
   background: white;
-  min-height: calc(100vh - 112px);
+  flex: 1;
+  overflow-y: auto;
   border-radius: 8px;
+}
+
+.layout-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.layout-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.layout-content::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .empty-page {

@@ -20,6 +20,7 @@ import {
   EditOutlined,
   DeleteOutlined,
   ReloadOutlined,
+  SearchOutlined,
 } from '@ant-design/icons'
 import {
   getMenuList,
@@ -27,10 +28,12 @@ import {
   addMenu,
   updateMenu,
   deleteMenu,
+  getMenuPage,
   Menu,
   MenuForm,
   MenuType,
   MenuStatus,
+  PageResult,
 } from '@/api/menu'
 
 const { TextArea } = Input
@@ -69,21 +72,54 @@ const MenuManagementPage = () => {
   const [modalTitle, setModalTitle] = useState('新增菜单')
   const [editingMenu, setEditingMenu] = useState<Menu | null>(null)
   const [form] = Form.useForm<MenuForm>()
+  const [searchForm] = Form.useForm()
   const [treeData, setTreeData] = useState<any[]>([])
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+    showSizeChanger: true,
+    showTotal: (total: number) => `共 ${total} 条记录`,
+    pageSizeOptions: ['10', '20', '50', '100'],
+  })
+  const [searchMenuName, setSearchMenuName] = useState<string>('')
 
-  const fetchMenuList = async () => {
+  const fetchMenuList = async (pageNum?: number, pageSize?: number, menuName?: string) => {
     setLoading(true)
     try {
-      const res = await getMenuList()
+      const params = {
+        pageNum: pageNum || pagination.current,
+        pageSize: pageSize || pagination.pageSize,
+        menuName: menuName !== undefined ? menuName : searchMenuName,
+      }
+      
+      const res = await getMenuPage(params)
       if (res.code === 200 && res.data) {
-        setMenuList(res.data)
-        buildTreeData(res.data)
+        const pageResult: PageResult<Menu> = res.data
+        setMenuList(pageResult.records)
+        setPagination(prev => ({
+          ...prev,
+          current: pageResult.pageNum,
+          pageSize: pageResult.pageSize,
+          total: pageResult.total,
+        }))
       }
     } catch (error) {
       console.error('获取菜单列表失败:', error)
       message.error('获取菜单列表失败')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchAllMenusForTree = async () => {
+    try {
+      const res = await getMenuList()
+      if (res.code === 200 && res.data) {
+        buildTreeData(res.data)
+      }
+    } catch (error) {
+      console.error('获取所有菜单失败:', error)
     }
   }
 
@@ -126,8 +162,27 @@ const MenuManagementPage = () => {
     setTreeData(result)
   }
 
+  const handleSearch = () => {
+    const menuName = searchForm.getFieldValue('menuName')
+    setSearchMenuName(menuName || '')
+    setPagination(prev => ({ ...prev, current: 1 }))
+    fetchMenuList(1, pagination.pageSize, menuName)
+  }
+
+  const handleReset = () => {
+    searchForm.resetFields()
+    setSearchMenuName('')
+    setPagination(prev => ({ ...prev, current: 1 }))
+    fetchMenuList(1, pagination.pageSize, '')
+  }
+
+  const handleTableChange = (pagination: any) => {
+    fetchMenuList(pagination.current, pagination.pageSize)
+  }
+
   useEffect(() => {
     fetchMenuList()
+    fetchAllMenusForTree()
   }, [])
 
   const handleAdd = () => {
@@ -319,6 +374,38 @@ const MenuManagementPage = () => {
       </h2>
 
       <Card>
+        <Form
+          form={searchForm}
+          layout="inline"
+          style={{ marginBottom: 16 }}
+        >
+          <Form.Item name="menuName" label="菜单名称">
+            <Input
+              placeholder="请输入菜单名称"
+              prefix={<SearchOutlined />}
+              style={{ width: 200 }}
+              allowClear
+            />
+          </Form.Item>
+          <Form.Item>
+            <Space>
+              <Button
+                type="primary"
+                icon={<SearchOutlined />}
+                onClick={handleSearch}
+              >
+                搜索
+              </Button>
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={handleReset}
+              >
+                重置
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+
         <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
           <Space>
             <Button
@@ -330,7 +417,7 @@ const MenuManagementPage = () => {
             </Button>
             <Button
               icon={<ReloadOutlined />}
-              onClick={fetchMenuList}
+              onClick={() => fetchMenuList()}
             >
               刷新
             </Button>
@@ -342,7 +429,8 @@ const MenuManagementPage = () => {
           dataSource={menuList}
           rowKey="id"
           loading={loading}
-          pagination={false}
+          pagination={pagination}
+          onChange={handleTableChange}
         />
       </Card>
 

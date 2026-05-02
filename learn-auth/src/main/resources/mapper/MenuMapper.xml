@@ -82,4 +82,27 @@
         WHERE parent_id = #{parentId}
     </select>
 
+    <select id="countTotal" resultType="long">
+        SELECT COUNT(*)
+        FROM menu
+        <where>
+            <if test="menuName != null and menuName != ''">
+                AND menu_name LIKE CONCAT('%', #{menuName}, '%')
+            </if>
+        </where>
+    </select>
+
+    <select id="selectPage" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM menu
+        <where>
+            <if test="menuName != null and menuName != ''">
+                AND menu_name LIKE CONCAT('%', #{menuName}, '%')
+            </if>
+        </where>
+        ORDER BY sort ASC, create_time ASC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
 </mapper>

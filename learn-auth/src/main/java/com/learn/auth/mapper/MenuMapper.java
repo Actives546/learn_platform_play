@@ -70,4 +70,22 @@ public interface MenuMapper {
      * @return 子菜单数量
      */
     int countByParentId(@Param("parentId") Long parentId);
+
+    /**
+     * 分页查询菜单列表
+     *
+     * @param menuName 菜单名称（模糊查询）
+     * @param offset   偏移量
+     * @param pageSize 每页大小
+     * @return 菜单列表
+     */
+    List<Menu> selectPage(@Param("menuName") String menuName, @Param("offset") int offset, @Param("pageSize") int pageSize);
+
+    /**
+     * 查询菜单总数（支持模糊查询）
+     *
+     * @param menuName 菜单名称（模糊查询）
+     * @return 菜单总数
+     */
+    long countTotal(@Param("menuName") String menuName);
 }
