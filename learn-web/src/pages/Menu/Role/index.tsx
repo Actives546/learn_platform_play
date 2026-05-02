@@ -287,7 +287,8 @@ const RoleManagementPage = () => {
               />
             </Space>
           }
-          style={{ width: 300, flexShrink: 0 }}
+          style={{ width: 300, flexShrink: 0, maxHeight: 'calc(100vh - 160px)' }}
+          bodyStyle={{ overflow: 'auto', padding: 0 }}
           extra={
             <Button
               type="primary"
@@ -300,6 +301,7 @@ const RoleManagementPage = () => {
           }
         >
           <Spin spinning={roleLoading}>
+            <div style={{ padding: 16 }}>
             <List
               dataSource={roleList}
               locale={{ emptyText: '暂无角色数据' }}
@@ -373,6 +375,7 @@ const RoleManagementPage = () => {
                 </List.Item>
               )}
             />
+            </div>
           </Spin>
         </Card>
 
@@ -385,7 +388,8 @@ const RoleManagementPage = () => {
               )}
             </Space>
           }
-          style={{ flex: 1 }}
+          style={{ flex: 1, maxHeight: 'calc(100vh - 160px)' }}
+          bodyStyle={{ overflow: 'auto', padding: 0 }}
           extra={
             <Button
               type="primary"
@@ -400,7 +404,7 @@ const RoleManagementPage = () => {
         >
           <Spin spinning={menuLoading}>
             {selectedRole ? (
-              <div>
+              <div style={{ padding: 16, maxHeight: 'calc(100vh - 260px)', overflow: 'auto' }}>
                 <div style={{ marginBottom: 16, padding: 12, backgroundColor: '#fafafa', borderRadius: 6 }}>
                   <Space>
                     <span style={{ color: '#666' }}>当前角色:</span>
