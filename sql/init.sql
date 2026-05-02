@@ -61,15 +61,28 @@ INSERT INTO role (id, role_name, role_code, description) VALUES
 (3, '普通用户', 'user', '普通用户权限');
 
 INSERT INTO menu (id, parent_id, menu_name, path, component, icon, menu_type, perms, sort) VALUES
-(1, 0, '系统管理', '/system', null, 'SettingOutlined', 1, null, 1),
-(2, 1, '用户管理', '/system/user', 'system/user/index', 'UserOutlined', 2, 'system:user:list', 1),
-(3, 1, '角色管理', '/system/role', 'system/role/index', 'TeamOutlined', 2, 'system:role:list', 2),
-(4, 1, '菜单管理', '/system/menu', 'system/menu/index', 'MenuOutlined', 2, 'system:menu:list', 3),
-(5, 0, '课程管理', '/course', null, 'BookOutlined', 1, null, 2),
-(6, 5, '课程列表', '/course/list', 'course/list/index', 'UnorderedListOutlined', 2, 'course:list', 1),
-(7, 5, '课程分类', '/course/category', 'course/category/index', 'AppstoreOutlined', 2, 'course:category:list', 2);
+(1, 0, '首页', '/', 'pages/Home/index', 'HomeOutlined', 2, null, 1),
+(2, 0, '教学管理', '/teaching', null, 'BookOutlined', 1, null, 2),
+(3, 2, '课程列表', '/teaching/course', 'pages/Teaching/Course/index', 'UnorderedListOutlined', 2, 'teaching:course:list', 1),
+(4, 2, '章节管理', '/teaching/chapter', 'pages/Teaching/Chapter/index', 'FileTextOutlined', 2, 'teaching:chapter:list', 2),
+(5, 2, '题库管理', '/teaching/question', 'pages/Teaching/Question/index', 'QuestionCircleOutlined', 2, 'teaching:question:list', 3),
+(6, 2, '教学计划', '/teaching/plan', 'pages/Teaching/Plan/index', 'ScheduleOutlined', 2, 'teaching:plan:list', 4),
+(7, 0, '人员管理', '/personnel', null, 'TeamOutlined', 1, null, 3),
+(8, 7, '学生管理', '/personnel/student', 'pages/Personnel/Student/index', 'UserOutlined', 2, 'personnel:student:list', 1),
+(9, 7, '老师管理', '/personnel/teacher', 'pages/Personnel/Teacher/index', 'SolutionOutlined', 2, 'personnel:teacher:list', 2),
+(10, 0, '学习进度', '/progress', null, 'LineChartOutlined', 1, null, 4),
+(11, 10, '学习进度', '/progress/study', 'pages/Progress/Study/index', 'LineChartOutlined', 2, 'progress:study:list', 1),
+(12, 10, '证书管理', '/progress/certificate', 'pages/Progress/Certificate/index', 'SafetyCertificateOutlined', 2, 'progress:certificate:list', 2),
+(13, 10, '学习计划', '/progress/study-plan', 'pages/Progress/StudyPlan/index', 'ScheduleOutlined', 2, 'progress:study-plan:list', 3),
+(14, 0, '数据分析', '/analysis', null, 'BarChartOutlined', 1, null, 5),
+(15, 14, '学习统计', '/analysis/statistics', 'pages/Analysis/Statistics/index', 'PieChartOutlined', 2, 'analysis:statistics:list', 1),
+(16, 14, '课程排行', '/analysis/ranking', 'pages/Analysis/Ranking/index', 'TrophyOutlined', 2, 'analysis:ranking:list', 2),
+(17, 14, '成绩分析', '/analysis/score', 'pages/Analysis/Score/index', 'BarChartOutlined', 2, 'analysis:score:list', 3),
+(18, 0, '菜单管理', '/menu', null, 'AppstoreOutlined', 1, null, 6),
+(19, 18, '菜单管理', '/menu/management', 'pages/Menu/Management/index', 'UnorderedListOutlined', 2, 'menu:management:list', 1),
+(20, 18, '角色授权管理', '/menu/role', 'pages/Menu/Role/index', 'SafetyOutlined', 2, 'menu:role:list', 2);
 
 INSERT INTO role_menu (role_id, menu_id) VALUES
-(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7),
-(2, 1), (2, 2), (2, 5), (2, 6), (2, 7),
-(3, 5), (3, 6);
+(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16), (1, 17), (1, 18), (1, 19), (1, 20),
+(2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (2, 8), (2, 9), (2, 10), (2, 11), (2, 12), (2, 13), (2, 14), (2, 15), (2, 16), (2, 17), (2, 18), (2, 19), (2, 20),
+(3, 1), (3, 2), (3, 3), (3, 4), (3, 10), (3, 11), (3, 12), (3, 13), (3, 14), (3, 15), (3, 16), (3, 17);
