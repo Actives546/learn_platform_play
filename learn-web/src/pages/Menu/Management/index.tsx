@@ -28,16 +28,11 @@ import {
   addMenu,
   updateMenu,
   deleteMenu,
-  getMenuPage,
   Menu,
   MenuForm,
   MenuType,
   MenuStatus,
-  PageResult,
 } from '@/api/menu'
-
-const { TextArea } = Input
-const { Option } = Select
 
 const iconOptions = [
   { label: '首页', value: 'HomeOutlined' },
@@ -74,35 +69,23 @@ const MenuManagementPage = () => {
   const [form] = Form.useForm<MenuForm>()
   const [searchForm] = Form.useForm()
   const [treeData, setTreeData] = useState<any[]>([])
-  const [pagination, setPagination] = useState({
-    current: 1,
-    pageSize: 10,
-    total: 0,
-    showSizeChanger: true,
-    showTotal: (total: number) => `共 ${total} 条记录`,
-    pageSizeOptions: ['10', '20', '50', '100'],
-  })
   const [searchMenuName, setSearchMenuName] = useState<string>('')
 
-  const fetchMenuList = async (pageNum?: number, pageSize?: number, menuName?: string) => {
+  const fetchMenuList = async (menuName?: string) => {
     setLoading(true)
     try {
-      const params = {
-        pageNum: pageNum || pagination.current,
-        pageSize: pageSize || pagination.pageSize,
-        menuName: menuName !== undefined ? menuName : searchMenuName,
-      }
-      
-      const res = await getMenuPage(params)
+      const res = await getMenuList()
       if (res.code === 200 && res.data) {
-        const pageResult: PageResult<Menu> = res.data
-        setMenuList(pageResult.records)
-        setPagination(prev => ({
-          ...prev,
-          current: pageResult.pageNum,
-          pageSize: pageResult.pageSize,
-          total: pageResult.total,
-        }))
+        let filtered = res.data
+        const keyword = menuName !== undefined ? menuName : searchMenuName
+        if (keyword) {
+          filtered = res.data.filter(menu =>
+            menu.menuName.toLowerCase().includes(keyword.toLowerCase())
+          )
+        }
+        // 将平铺列表转为树形结构
+        const treeList = buildFlatTree(filtered)
+        setMenuList(treeList)
       }
     } catch (error) {
       console.error('获取菜单列表失败:', error)
@@ -110,6 +93,31 @@ const MenuManagementPage = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  /**
+   * 将平铺菜单列表转为树形结构（用于表格展示）
+   */
+  const buildFlatTree = (menus: Menu[]): Menu[] => {
+    const map = new Map<number, Menu>()
+    menus.forEach(m => map.set(m.id, { ...m, children: [] }))
+
+    const result: Menu[] = []
+    menus.forEach(m => {
+      const node = map.get(m.id)!
+      if (m.parentId === 0) {
+        result.push(node)
+      } else {
+        const parent = map.get(m.parentId)
+        if (parent) {
+          if (!parent.children) parent.children = []
+          parent.children.push(node)
+        } else {
+          result.push(node)
+        }
+      }
+    })
+    return result
   }
 
   const fetchAllMenusForTree = async () => {
@@ -165,19 +173,13 @@ const MenuManagementPage = () => {
   const handleSearch = () => {
     const menuName = searchForm.getFieldValue('menuName')
     setSearchMenuName(menuName || '')
-    setPagination(prev => ({ ...prev, current: 1 }))
-    fetchMenuList(1, pagination.pageSize, menuName)
+    fetchMenuList(menuName)
   }
 
   const handleReset = () => {
     searchForm.resetFields()
     setSearchMenuName('')
-    setPagination(prev => ({ ...prev, current: 1 }))
-    fetchMenuList(1, pagination.pageSize, '')
-  }
-
-  const handleTableChange = (pagination: any) => {
-    fetchMenuList(pagination.current, pagination.pageSize)
+    fetchMenuList('')
   }
 
   useEffect(() => {
@@ -230,6 +232,7 @@ const MenuManagementPage = () => {
       if (res.code === 200) {
         message.success('删除成功')
         fetchMenuList()
+        fetchAllMenusForTree()
       }
     } catch (error) {
       console.error('删除菜单失败:', error)
@@ -246,6 +249,7 @@ const MenuManagementPage = () => {
           message.success('更新成功')
           setModalVisible(false)
           fetchMenuList()
+          fetchAllMenusForTree()
         }
       } else {
         const res = await addMenu(values as MenuForm)
@@ -253,6 +257,7 @@ const MenuManagementPage = () => {
           message.success('新增成功')
           setModalVisible(false)
           fetchMenuList()
+          fetchAllMenusForTree()
         }
       }
     } catch (error) {
@@ -429,8 +434,8 @@ const MenuManagementPage = () => {
           dataSource={menuList}
           rowKey="id"
           loading={loading}
-          pagination={pagination}
-          onChange={handleTableChange}
+          pagination={false}
+          scroll={{ x: 1200 }}
         />
       </Card>
 
