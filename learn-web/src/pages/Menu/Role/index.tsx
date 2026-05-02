@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Card,
   List,
@@ -45,7 +45,8 @@ const RoleManagementPage = () => {
   const [roleList, setRoleList] = useState<Role[]>([])
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
   const [treeData, setTreeData] = useState<any[]>([])
-  const [checkedKeys, setCheckedKeys] = useState<number[]>([])
+  const [checkedKeys, setCheckedKeys] = useState<React.Key[]>([])
+  const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([])
   const [roleLoading, setRoleLoading] = useState(false)
   const [menuLoading, setMenuLoading] = useState(false)
   const [grantLoading, setGrantLoading] = useState(false)
@@ -54,54 +55,12 @@ const RoleManagementPage = () => {
   const [editingRole, setEditingRole] = useState<Role | null>(null)
   const [form] = Form.useForm()
 
-  const fetchRoleList = async () => {
-    setRoleLoading(true)
-    try {
-      const res = await getRoleList()
-      if (res.code === 200 && res.data) {
-        setRoleList(res.data)
-        if (!selectedRole && res.data.length > 0) {
-          setSelectedRole(res.data[0])
-        }
-      }
-    } catch (error) {
-      console.error('获取角色列表失败:', error)
-      message.error('获取角色列表失败')
-    } finally {
-      setRoleLoading(false)
-    }
-  }
-
-  const fetchMenuList = async () => {
-    setMenuLoading(true)
-    try {
-      const res = await getMenuList()
-      if (res.code === 200 && res.data) {
-        buildTreeData(res.data)
-      }
-    } catch (error) {
-      console.error('获取菜单列表失败:', error)
-      message.error('获取菜单列表失败')
-    } finally {
-      setMenuLoading(false)
-    }
-  }
-
-  const fetchRoleMenuIds = async (roleId: number) => {
-    try {
-      const res = await getRoleMenuIds(roleId)
-      if (res.code === 200 && res.data) {
-        setCheckedKeys(res.data)
-      }
-    } catch (error) {
-      console.error('获取角色菜单ID失败:', error)
-      setCheckedKeys([])
-    }
-  }
-
-  const buildTreeData = (menus: Menu[]) => {
+  const buildTreeData = useCallback((menus: Menu[]) => {
     const childrenMap = new Map<number, any[]>()
+    const allKeys: React.Key[] = []
+
     menus.forEach(menu => {
+      allKeys.push(menu.id)
       const node = {
         key: menu.id,
         title: (
@@ -133,21 +92,86 @@ const RoleManagementPage = () => {
 
     const result = buildTree(0)
     setTreeData(result)
-  }
+    setExpandedKeys(allKeys)
+  }, [])
+
+  const fetchMenuList = useCallback(async () => {
+    setMenuLoading(true)
+    try {
+      const res = await getMenuList()
+      if (res.code === 200 && res.data) {
+        buildTreeData(res.data)
+      }
+    } catch (error) {
+      console.error('获取菜单列表失败:', error)
+      message.error('获取菜单列表失败')
+    } finally {
+      setMenuLoading(false)
+    }
+  }, [buildTreeData])
+
+  const fetchRoleMenuIds = useCallback(async (roleId: number) => {
+    try {
+      const res = await getRoleMenuIds(roleId)
+      if (res.code === 200 && res.data) {
+        setCheckedKeys(res.data)
+      } else {
+        setCheckedKeys([])
+      }
+    } catch (error) {
+      console.error('获取角色菜单ID失败:', error)
+      setCheckedKeys([])
+    }
+  }, [])
+
+  const fetchRoleList = useCallback(async () => {
+    setRoleLoading(true)
+    try {
+      const res = await getRoleList()
+      if (res.code === 200 && res.data) {
+        setRoleList(res.data)
+      }
+    } catch (error) {
+      console.error('获取角色列表失败:', error)
+      message.error('获取角色列表失败')
+    } finally {
+      setRoleLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchMenuList()
+  }, [fetchMenuList])
+
+  useEffect(() => {
+    fetchRoleList()
+  }, [fetchRoleList])
+
+  useEffect(() => {
+    if (roleList.length > 0 && !selectedRole) {
+      setSelectedRole(roleList[0])
+    }
+  }, [roleList, selectedRole])
+
+  useEffect(() => {
+    if (selectedRole) {
+      fetchRoleMenuIds(selectedRole.id)
+    }
+  }, [selectedRole?.id, fetchRoleMenuIds])
 
   const handleRoleSelect = (role: Role) => {
-    setSelectedRole(role)
-    if (role) {
-      fetchRoleMenuIds(role.id)
+    if (selectedRole?.id !== role.id) {
+      setSelectedRole(role)
     }
   }
 
-  const handleCheck = (checkedKeysValue: any) => {
-    if (checkedKeysValue.checked) {
-      setCheckedKeys(checkedKeysValue.checked)
-    } else {
-      setCheckedKeys(checkedKeysValue)
-    }
+  const handleCheck = (checkedKeysValue: any, _info: any) => {
+    const keys = Array.isArray(checkedKeysValue) ? checkedKeysValue : checkedKeysValue.checked
+    setCheckedKeys(keys || [])
+  }
+
+  const handleExpand = (expandedKeysValue: React.Key[]) => {
+    setExpandedKeys(expandedKeysValue)
   }
 
   const handleGrantMenus = async () => {
@@ -157,7 +181,8 @@ const RoleManagementPage = () => {
     }
     setGrantLoading(true)
     try {
-      const res = await grantMenus(selectedRole.id, checkedKeys)
+      const menuIds = checkedKeys.map(key => Number(key))
+      const res = await grantMenus(selectedRole.id, menuIds)
       if (res.code === 200) {
         message.success('授权成功')
       }
@@ -236,17 +261,6 @@ const RoleManagementPage = () => {
       console.error('保存角色失败:', error)
     }
   }
-
-  useEffect(() => {
-    fetchRoleList()
-    fetchMenuList()
-  }, [])
-
-  useEffect(() => {
-    if (selectedRole) {
-      fetchRoleMenuIds(selectedRole.id)
-    }
-  }, [selectedRole?.id])
 
   const getStatusColor = (status: number) => {
     return status === 1 ? 'success' : 'default'
@@ -398,15 +412,23 @@ const RoleManagementPage = () => {
                     <Tag color="green">{checkedKeys.length} 个菜单</Tag>
                   </Space>
                 </div>
-                <Tree
-                  checkable
-                  defaultExpandAll
-                  checkedKeys={checkedKeys}
-                  onCheck={handleCheck}
-                  treeData={treeData}
-                  height={500}
-                  className="menu-tree"
-                />
+                {treeData.length > 0 ? (
+                  <Tree
+                    checkable
+                    checkedKeys={checkedKeys}
+                    expandedKeys={expandedKeys}
+                    onCheck={handleCheck}
+                    onExpand={handleExpand}
+                    treeData={treeData}
+                    height={500}
+                    className="menu-tree"
+                    checkStrictly
+                  />
+                ) : (
+                  <div style={{ textAlign: 'center', padding: 50, color: '#999' }}>
+                    <div>菜单数据加载中...</div>
+                  </div>
+                )}
               </div>
             ) : (
               <div style={{ textAlign: 'center', padding: 100, color: '#999' }}>
