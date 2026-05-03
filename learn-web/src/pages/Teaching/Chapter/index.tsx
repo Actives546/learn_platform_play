@@ -194,6 +194,8 @@ const ChapterPage = () => {
     } catch (error) {
       console.error('获取章节详情失败:', error)
       message.error('获取章节详情失败')
+      console.error('获取章节详情失败:', error)
+      message.error('获取章节详情失败')
     }
   }
 
