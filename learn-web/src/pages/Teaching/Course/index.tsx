@@ -57,7 +57,7 @@ const CoursePage = () => {
   const [detailVisible, setDetailVisible] = useState(false)
   const [detailCourse, setDetailCourse] = useState<Course | null>(null)
   const [deleteVisible, setDeleteVisible] = useState(false)
-  const [deletingCourseId, setDeletingCourseId] = useState<number | null>(null)
+  const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null)
   const [deletingCourseName, setDeletingCourseName] = useState('')
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [form] = Form.useForm()
@@ -389,14 +389,23 @@ const CoursePage = () => {
   }
 
   return (
-    <div className="course-management-page" style={{ padding: 24 }}>
-      <Title level={4} style={{ marginBottom: 24 }}>
+    <div
+      className="course-management-page"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        padding: 24,
+        overflow: 'hidden',
+      }}
+    >
+      <Title level={4} style={{ marginBottom: 24, flexShrink: 0 }}>
         <BookOutlined style={{ marginRight: 12 }} />
         课程管理
       </Title>
 
       <Card
-        style={{ marginBottom: 16 }}
+        style={{ marginBottom: 16, flexShrink: 0 }}
         bodyStyle={{ padding: '16px 24px' }}
       >
         <Space wrap size="middle">
@@ -444,6 +453,8 @@ const CoursePage = () => {
       </Card>
 
       <Card
+        style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+        bodyStyle={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 0 }}
         extra={
           <Button
             type="primary"
@@ -454,16 +465,18 @@ const CoursePage = () => {
           </Button>
         }
       >
-        <Spin spinning={loading}>
-          <Table
-            columns={columns}
-            dataSource={courseList}
-            rowKey="id"
-            pagination={paginationConfig}
-            scroll={{ x: 1150 }}
-            locale={{ emptyText: '暂无课程数据' }}
-          />
-        </Spin>
+        <div style={{ flex: 1, overflow: 'auto', padding: '0 24px 24px 24px' }}>
+          <Spin spinning={loading}>
+            <Table
+              columns={columns}
+              dataSource={courseList}
+              rowKey="id"
+              pagination={paginationConfig}
+              scroll={{ x: 1150 }}
+              locale={{ emptyText: '暂无课程数据' }}
+            />
+          </Spin>
+        </div>
       </Card>
 
       <Modal
