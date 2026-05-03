@@ -248,6 +248,12 @@ public class TeachingPlanServiceImpl implements TeachingPlanService {
             }
         }
 
+        if (teachingPlan.getStartTime() != null && teachingPlan.getEndTime() != null) {
+            if (teachingPlan.getEndTime().isBefore(teachingPlan.getStartTime())) {
+                throw BusinessException.of("结束时间不能早于开始时间");
+            }
+        }
+
         TeachingPlan existTeachingPlan = teachingPlanMapper.selectByCourseIdAndPlanName(
                 teachingPlan.getCourseId(), teachingPlan.getPlanName());
         if (existTeachingPlan != null) {

@@ -514,7 +514,7 @@ const TeachingPlanPage = () => {
               dataSource={teachingPlanList}
               rowKey="id"
               pagination={paginationConfig}
-              scroll={{ x: 1400 }}
+              scroll={{ x: 1400, y: 500 }}
               locale={{ emptyText: '暂无教学计划数据' }}
             />
           </Spin>
