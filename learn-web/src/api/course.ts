@@ -27,6 +27,25 @@ export interface CourseForm {
   sort?: number
 }
 
+export interface Chapter {
+  id: string
+  courseId: string
+  chapterName: string
+  description?: string
+  sort?: number
+  createTime?: string
+  updateTime?: string
+  isDeleted?: number
+}
+
+export interface ChapterForm {
+  id?: string
+  courseId: string
+  chapterName: string
+  description?: string
+  sort?: number
+}
+
 export interface PageResult<T> {
   total: number
   records: T[]
@@ -38,6 +57,13 @@ export interface PageResult<T> {
 export interface CoursePageParams {
   courseName?: string
   status?: number
+  pageNum?: number
+  pageSize?: number
+}
+
+export interface ChapterPageParams {
+  courseId?: string
+  chapterName?: string
   pageNum?: number
   pageSize?: number
 }
@@ -64,4 +90,28 @@ export const deleteCourse = (id: string): Promise<ApiResponse<void>> => {
 
 export const updateStatusBatch = (ids: string[], status: number): Promise<ApiResponse<void>> => {
   return put<void>(`/course/status/batch?ids=${ids.join(',')}&status=${status}`)
+}
+
+export const getChapterPage = (params: ChapterPageParams): Promise<ApiResponse<PageResult<Chapter>>> => {
+  return get<PageResult<Chapter>>('/chapter/page', { params })
+}
+
+export const getChapterById = (id: string): Promise<ApiResponse<Chapter>> => {
+  return get<Chapter>(`/chapter/${id}`)
+}
+
+export const getChaptersByCourseId = (courseId: string): Promise<ApiResponse<Chapter[]>> => {
+  return get<Chapter[]>(`/chapter/course/${courseId}`)
+}
+
+export const addChapter = (chapter: ChapterForm): Promise<ApiResponse<void>> => {
+  return post<void>('/chapter', chapter)
+}
+
+export const updateChapter = (chapter: ChapterForm): Promise<ApiResponse<void>> => {
+  return put<void>('/chapter', chapter)
+}
+
+export const deleteChapter = (id: string): Promise<ApiResponse<void>> => {
+  return del<void>(`/chapter/${id}`)
 }
