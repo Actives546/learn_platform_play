@@ -29,6 +29,10 @@ spring:
           uri: lb://learn-auth
           predicates:
             - Path=/role/**
+        - id: learn-user
+          uri: lb://learn-user
+          predicates:
+            - Path=/user/**
   data:
     redis:
       host: 127.0.0.1
