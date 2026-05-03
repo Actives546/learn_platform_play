@@ -42,6 +42,16 @@ public interface ChapterMapper {
     List<Chapter> selectByCourseId(@Param("courseId") Long courseId);
 
     /**
+     * 根据课程ID和章节名称查询章节（用于校验重复）
+     * 排除已删除的章节
+     *
+     * @param courseId    课程ID
+     * @param chapterName 章节名称
+     * @return 章节实体对象，如果不存在返回null
+     */
+    Chapter selectByCourseIdAndChapterName(@Param("courseId") Long courseId, @Param("chapterName") String chapterName);
+
+    /**
      * 插入新章节
      *
      * @param chapter 章节实体对象
