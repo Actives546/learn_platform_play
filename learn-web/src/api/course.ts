@@ -115,3 +115,64 @@ export const updateChapter = (chapter: ChapterForm): Promise<ApiResponse<void>> 
 export const deleteChapter = (id: string): Promise<ApiResponse<void>> => {
   return del<void>(`/chapter/${id}`)
 }
+
+export type TeachingPlanStatus = 0 | 1 | 2 | 3
+
+export interface TeachingPlan {
+  id: string
+  courseId: string
+  planName: string
+  description?: string
+  startTime?: string
+  endTime?: string
+  weeklySchedule?: string
+  progress?: number
+  status: TeachingPlanStatus
+  createTime?: string
+  updateTime?: string
+  isDeleted?: number
+}
+
+export interface TeachingPlanForm {
+  id?: string
+  courseId: string
+  planName: string
+  description?: string
+  startTime?: string
+  endTime?: string
+  weeklySchedule?: string
+  progress?: number
+  status?: TeachingPlanStatus
+}
+
+export interface TeachingPlanPageParams {
+  courseId?: string
+  planName?: string
+  status?: number
+  pageNum?: number
+  pageSize?: number
+}
+
+export const getTeachingPlanPage = (params: TeachingPlanPageParams): Promise<ApiResponse<PageResult<TeachingPlan>>> => {
+  return get<PageResult<TeachingPlan>>('/teaching-plan/page', { params })
+}
+
+export const getTeachingPlanById = (id: string): Promise<ApiResponse<TeachingPlan>> => {
+  return get<TeachingPlan>(`/teaching-plan/${id}`)
+}
+
+export const getTeachingPlansByCourseId = (courseId: string): Promise<ApiResponse<TeachingPlan[]>> => {
+  return get<TeachingPlan[]>(`/teaching-plan/course/${courseId}`)
+}
+
+export const addTeachingPlan = (teachingPlan: TeachingPlanForm): Promise<ApiResponse<void>> => {
+  return post<void>('/teaching-plan', teachingPlan)
+}
+
+export const updateTeachingPlan = (teachingPlan: TeachingPlanForm): Promise<ApiResponse<void>> => {
+  return put<void>('/teaching-plan', teachingPlan)
+}
+
+export const deleteTeachingPlan = (id: string): Promise<ApiResponse<void>> => {
+  return del<void>(`/teaching-plan/${id}`)
+}
