@@ -1,10 +1,40 @@
-import { Card, Descriptions, Avatar, Tag } from 'antd'
+import { useState, useEffect } from 'react'
+import { Card, Descriptions, Avatar, Tag, Spin } from 'antd'
 import { UserOutlined, PhoneOutlined, MailOutlined } from '@ant-design/icons'
 import { useUserStore } from '@/store/userStore'
-import type { UserInfo } from '@/api/auth'
+import { getUserInfo, UserInfo } from '@/api/auth'
 
 const ProfilePage = () => {
-  const { userInfo } = useUserStore()
+  const { userInfo: storeUserInfo } = useUserStore()
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      setLoading(true)
+      try {
+        const res = await getUserInfo()
+        if (res.code === 200 && res.data) {
+          setUserInfo(res.data)
+        }
+      } catch (error) {
+        console.error('获取用户信息失败:', error)
+        setUserInfo(storeUserInfo)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUserInfo()
+  }, [storeUserInfo])
+
+  if (loading) {
+    return (
+      <div className="profile-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+        <Spin size="large" />
+      </div>
+    )
+  }
 
   return (
     <div className="profile-page">
@@ -31,10 +61,10 @@ const ProfilePage = () => {
           <Descriptions.Item label="昵称">
             {userInfo?.nickName || '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="手机号" icon={<PhoneOutlined />}>
+          <Descriptions.Item label={<span><PhoneOutlined style={{ marginRight: 4 }} />手机号</span>}>
             {userInfo?.phone || '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="邮箱" icon={<MailOutlined />}>
+          <Descriptions.Item label={<span><MailOutlined style={{ marginRight: 4 }} />邮箱</span>}>
             {userInfo?.email || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="用户ID">
