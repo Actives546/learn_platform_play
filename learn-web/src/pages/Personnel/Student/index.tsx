@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import {
   Card,
-  Table,
   Button,
   Space,
   message,
@@ -13,6 +12,9 @@ import {
   Select,
   Typography,
   Descriptions,
+  Pagination,
+  Avatar,
+  Empty,
 } from 'antd'
 import {
   ReloadOutlined,
@@ -23,6 +25,8 @@ import {
   SearchOutlined,
   EyeOutlined,
   ExclamationCircleOutlined,
+  PhoneOutlined,
+  MailOutlined,
 } from '@ant-design/icons'
 import {
   getUserPage,
@@ -132,8 +136,8 @@ const StudentPage = () => {
   const handleAdd = () => {
     setModalTitle('新增学生')
     setEditingUser(null)
-    form.resetFields()
     form.setFieldsValue({
+      id: undefined,
       userName: '',
       nickName: '',
       password: '',
@@ -247,105 +251,6 @@ const StudentPage = () => {
     return status === 1 ? '启用' : '禁用'
   }
 
-  const columns = [
-    {
-      title: '用户名',
-      dataIndex: 'userName',
-      key: 'userName',
-      width: 120,
-      ellipsis: true,
-    },
-    {
-      title: '昵称',
-      dataIndex: 'nickName',
-      key: 'nickName',
-      width: 100,
-      ellipsis: true,
-      render: (text: string) => text || '-',
-    },
-    {
-      title: '手机号',
-      dataIndex: 'phone',
-      key: 'phone',
-      width: 120,
-      ellipsis: true,
-      render: (text: string) => text || '-',
-    },
-    {
-      title: '邮箱',
-      dataIndex: 'email',
-      key: 'email',
-      width: 160,
-      ellipsis: true,
-      render: (text: string) => text || '-',
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      width: 80,
-      render: (status: number) => (
-        <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>
-      ),
-    },
-    {
-      title: '创建时间',
-      dataIndex: 'createTime',
-      key: 'createTime',
-      width: 160,
-      ellipsis: true,
-    },
-    {
-      title: '操作',
-      key: 'action',
-      width: 180,
-      fixed: 'right' as const,
-      render: (_: unknown, record: User) => (
-        <Space size="small">
-          <Button
-            type="link"
-            size="small"
-            icon={<EyeOutlined />}
-            onClick={() => handleView(record)}
-          >
-            查看
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          >
-            编辑
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDeleteClick(record)}
-          >
-            删除
-          </Button>
-        </Space>
-      ),
-    },
-  ]
-
-  const paginationConfig = {
-    current: pageNum,
-    pageSize: pageSize,
-    total: total,
-    showSizeChanger: true,
-    showQuickJumper: true,
-    showTotal: (total: number) => `共 ${total} 条记录`,
-    pageSizeOptions: ['10', '20', '50', '100'],
-    onChange: (page: number, size: number) => {
-      setPageNum(page)
-      setPageSize(size)
-    },
-  }
-
   return (
     <div className="student-management-page" style={{ padding: 24 }}>
       <Title level={4} style={{ marginBottom: 24 }}>
@@ -412,14 +317,157 @@ const StudentPage = () => {
         }
       >
         <Spin spinning={loading}>
-          <Table
-            columns={columns}
-            dataSource={userList}
-            rowKey="id"
-            pagination={paginationConfig}
-            scroll={{ x: 920 }}
-            locale={{ emptyText: '暂无学生数据' }}
-          />
+          {userList.length > 0 ? (
+            <>
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 16,
+                  marginBottom: 24,
+                }}
+              >
+                {userList.map((user) => (
+                  <Card
+                    key={user.id}
+                    size="small"
+                    style={{
+                      width: 'calc(33.33% - 11px)',
+                      minWidth: 280,
+                    }}
+                    hoverable
+                  >
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                      <Avatar
+                        size={48}
+                        icon={<UserOutlined />}
+                        src={user.avatar}
+                        style={{ flexShrink: 0 }}
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            marginBottom: 4,
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontWeight: 600,
+                              fontSize: 15,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {user.userName}
+                          </span>
+                          {user.nickName && (
+                            <span style={{ color: '#666', fontSize: 12 }}>
+                              ({user.nickName})
+                            </span>
+                          )}
+                          <Tag color={getStatusColor(user.status)} style={{ marginLeft: 'auto' }}>
+                            {getStatusText(user.status)}
+                          </Tag>
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 13,
+                            color: '#666',
+                            marginBottom: 2,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          <PhoneOutlined style={{ marginRight: 4 }} />
+                          {user.phone || '-'}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 13,
+                            color: '#666',
+                            marginBottom: 8,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          <MailOutlined style={{ marginRight: 4 }} />
+                          {user.email || '-'}
+                        </div>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
+                        >
+                          <span style={{ fontSize: 12, color: '#999' }}>
+                            {user.createTime || '-'}
+                          </span>
+                          <Space size="small">
+                            <Button
+                              type="link"
+                              size="small"
+                              icon={<EyeOutlined />}
+                              onClick={() => handleView(user)}
+                            >
+                              查看
+                            </Button>
+                            <Button
+                              type="link"
+                              size="small"
+                              icon={<EditOutlined />}
+                              onClick={() => handleEdit(user)}
+                            >
+                              编辑
+                            </Button>
+                            <Button
+                              type="link"
+                              size="small"
+                              danger
+                              icon={<DeleteOutlined />}
+                              onClick={() => handleDeleteClick(user)}
+                            >
+                              删除
+                            </Button>
+                          </Space>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  paddingTop: 16,
+                  borderTop: '1px solid #f0f0f0',
+                }}
+              >
+                <Pagination
+                  current={pageNum}
+                  pageSize={pageSize}
+                  total={total}
+                  showSizeChanger
+                  showQuickJumper
+                  showTotal={(total: number) => `共 ${total} 条记录`}
+                  pageSizeOptions={['10', '20', '50', '100']}
+                  onChange={(page: number, size: number) => {
+                    setPageNum(page)
+                    setPageSize(size)
+                  }}
+                />
+              </div>
+            </>
+          ) : (
+            <Empty description="暂无学生数据" />
+          )}
         </Spin>
       </Card>
 

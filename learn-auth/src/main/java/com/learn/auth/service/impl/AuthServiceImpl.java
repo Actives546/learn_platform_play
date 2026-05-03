@@ -109,8 +109,11 @@ public class AuthServiceImpl implements AuthService {
         userInfo.put("id", user.getId());
         userInfo.put("userName", user.getUserName());
         userInfo.put("nickName", user.getNickName());
+        userInfo.put("phone", user.getPhone());
+        userInfo.put("email", user.getEmail());
         userInfo.put("avatar", user.getAvatar());
         userInfo.put("roleId", user.getRoleId());
+        userInfo.put("status", user.getStatus());
         result.put("userInfo", userInfo);
 
         // 9. 存储登录用户信息到Redis，用于后续的token验证
