@@ -14,7 +14,6 @@ import {
   Descriptions,
   InputNumber,
   Tooltip,
-  Popconfirm,
 } from 'antd'
 import {
   ReloadOutlined,
@@ -332,22 +331,15 @@ const ChapterPage = () => {
           >
             编辑
           </Button>
-          <Popconfirm
-            title="确定要删除该章节吗？"
-            description="删除后无法恢复，请谨慎操作"
-            onConfirm={() => handleDeleteClick(record)}
-            okText="确定"
-            cancelText="取消"
+          <Button
+            type="link"
+            size="small"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDeleteClick(record)}
           >
-            <Button
-              type="link"
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-            >
-              删除
-            </Button>
-          </Popconfirm>
+            删除
+          </Button>
         </Space>
       ),
     },
