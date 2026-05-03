@@ -132,8 +132,13 @@ const StudentPage = () => {
   const handleAdd = () => {
     setModalTitle('新增学生')
     setEditingUser(null)
-    form.resetFields()
     form.setFieldsValue({
+      id: '',
+      userName: '',
+      nickName: '',
+      password: '',
+      phone: '',
+      email: '',
       status: 1,
       roleId: 3,
     })
