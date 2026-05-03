@@ -54,10 +54,12 @@ export interface RolePageParams {
 
 /**
  * 获取角色列表
+ * @param roleName 角色名称（可选，模糊查询）
  * @returns 角色列表
  */
-export const getRoleList = (): Promise<ApiResponse<Role[]>> => {
-  return get<Role[]>('/role/list')
+export const getRoleList = (roleName?: string): Promise<ApiResponse<Role[]>> => {
+  const params = roleName ? { roleName } : undefined
+  return get<Role[]>('/role/list', { params })
 }
 
 /**

@@ -44,7 +44,6 @@ const { TextArea, Search } = Input
 
 const RoleManagementPage = () => {
   const [roleList, setRoleList] = useState<Role[]>([])
-  const [filteredRoleList, setFilteredRoleList] = useState<Role[]>([])
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
   const [treeData, setTreeData] = useState<any[]>([])
   const [checkedKeys, setCheckedKeys] = useState<React.Key[]>([])
@@ -123,13 +122,12 @@ const RoleManagementPage = () => {
     }
   }
 
-  const fetchRoleList = async () => {
+  const fetchRoleList = async (keyword?: string) => {
     setRoleLoading(true)
     try {
-      const res = await getRoleList()
+      const res = await getRoleList(keyword)
       if (res.code === 200 && res.data) {
         setRoleList(res.data)
-        setFilteredRoleList(res.data)
       }
     } catch (error) {
       console.error('获取角色列表失败:', error)
@@ -139,20 +137,9 @@ const RoleManagementPage = () => {
     }
   }
 
-  const filterRoleList = (keyword: string) => {
-    if (!keyword.trim()) {
-      setFilteredRoleList(roleList)
-      return
-    }
-    const filtered = roleList.filter(role =>
-      role.roleName.toLowerCase().includes(keyword.toLowerCase())
-    )
-    setFilteredRoleList(filtered)
-  }
-
   const handleSearch = (value: string) => {
     setSearchKeyword(value)
-    filterRoleList(value)
+    fetchRoleList(value)
   }
 
   useEffect(() => {
@@ -171,10 +158,6 @@ const RoleManagementPage = () => {
       setCheckedKeys([])
     }
   }, [selectedRoleId])
-
-  useEffect(() => {
-    filterRoleList(searchKeyword)
-  }, [roleList])
 
   const handleRoleSelect = (role: Role) => {
     if (selectedRole?.id !== role.id) {
@@ -241,7 +224,7 @@ const RoleManagementPage = () => {
           setSelectedRole(null)
           setCheckedKeys([])
         }
-        await fetchRoleList()
+        await fetchRoleList(searchKeyword)
       }
     } catch (error) {
       console.error('删除角色失败:', error)
@@ -260,7 +243,7 @@ const RoleManagementPage = () => {
         if (res.code === 200) {
           message.success('更新成功')
           setModalVisible(false)
-          fetchRoleList()
+          fetchRoleList(searchKeyword)
         }
       } else {
         const res = await addRole({
@@ -269,7 +252,7 @@ const RoleManagementPage = () => {
         if (res.code === 200) {
           message.success('新增成功')
           setModalVisible(false)
-          fetchRoleList()
+          fetchRoleList(searchKeyword)
         }
       }
     } catch (error) {
@@ -300,7 +283,7 @@ const RoleManagementPage = () => {
               <Button
                 type="text"
                 icon={<ReloadOutlined />}
-                onClick={() => fetchRoleList()}
+                onClick={() => fetchRoleList(searchKeyword)}
               />
             </Space>
           }
@@ -325,17 +308,18 @@ const RoleManagementPage = () => {
                   allowClear
                   enterButton={<SearchOutlined />}
                   onSearch={handleSearch}
+                  value={searchKeyword}
                   onChange={(e) => {
                     const value = e.target.value
                     setSearchKeyword(value)
                     if (!value) {
-                      filterRoleList('')
+                      fetchRoleList('')
                     }
                   }}
                 />
               </div>
               <List
-                dataSource={filteredRoleList}
+                dataSource={roleList}
                 locale={{ emptyText: searchKeyword ? '未找到匹配的角色' : '暂无角色数据' }}
                 renderItem={(role) => (
                   <List.Item

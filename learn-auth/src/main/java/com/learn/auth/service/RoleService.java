@@ -16,11 +16,13 @@ import java.util.List;
 public interface RoleService {
 
     /**
-     * 获取所有角色列表
+     * 获取角色列表
+     * 支持按角色名称模糊查询
      *
+     * @param roleName 角色名称（可选，模糊查询）
      * @return 角色列表
      */
-    Result<List<Role>> getRoleList();
+    Result<List<Role>> getRoleList(String roleName);
 
     /**
      * 分页查询角色列表
