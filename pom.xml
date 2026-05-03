@@ -15,6 +15,7 @@
         <module>learn-gateway</module>
         <module>learn-auth</module>
         <module>learn-user</module>
+        <module>learn-course</module>
     </modules>
 
     <properties>

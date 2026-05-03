@@ -33,6 +33,10 @@ spring:
           uri: lb://learn-user
           predicates:
             - Path=/user/**
+        - id: learn-course
+          uri: lb://learn-course
+          predicates:
+            - Path=/course/**
   data:
     redis:
       host: 127.0.0.1
