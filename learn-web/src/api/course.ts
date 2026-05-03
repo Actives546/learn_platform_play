@@ -3,11 +3,11 @@ import { post, get, put, del, ApiResponse } from '@/utils/request'
 export type CourseStatus = 0 | 1 | 2
 
 export interface Course {
-  id: number
+  id: string
   courseName: string
   cover?: string
   description?: string
-  teacherId?: number
+  teacherId?: string
   lessonCount?: number
   status: CourseStatus
   sort?: number
@@ -17,11 +17,11 @@ export interface Course {
 }
 
 export interface CourseForm {
-  id?: number
+  id?: string
   courseName: string
   cover?: string
   description?: string
-  teacherId?: number
+  teacherId?: string
   lessonCount?: number
   status?: CourseStatus
   sort?: number
@@ -46,7 +46,7 @@ export const getCoursePage = (params: CoursePageParams): Promise<ApiResponse<Pag
   return get<PageResult<Course>>('/course/page', { params })
 }
 
-export const getCourseById = (id: number): Promise<ApiResponse<Course>> => {
+export const getCourseById = (id: string): Promise<ApiResponse<Course>> => {
   return get<Course>(`/course/${id}`)
 }
 
@@ -58,10 +58,10 @@ export const updateCourse = (course: CourseForm): Promise<ApiResponse<void>> => 
   return put<void>('/course', course)
 }
 
-export const deleteCourse = (id: number): Promise<ApiResponse<void>> => {
+export const deleteCourse = (id: string): Promise<ApiResponse<void>> => {
   return del<void>(`/course/${id}`)
 }
 
-export const updateStatusBatch = (ids: number[], status: number): Promise<ApiResponse<void>> => {
+export const updateStatusBatch = (ids: string[], status: number): Promise<ApiResponse<void>> => {
   return put<void>(`/course/status/batch?ids=${ids.join(',')}&status=${status}`)
 }
