@@ -29,13 +29,16 @@ public class RoleController {
     /**
      * 获取角色列表接口
      * 用于角色授权管理页面左侧角色列表展示
+     * 支持按角色名称模糊查询
      *
+     * @param roleName 角色名称（可选，模糊查询）
      * @return 角色列表
      */
     @GetMapping("/list")
-    public Result<List<Role>> getRoleList() {
-        log.info("收到获取角色列表请求");
-        return roleService.getRoleList();
+    public Result<List<Role>> getRoleList(
+            @RequestParam(required = false) String roleName) {
+        log.info("收到获取角色列表请求: roleName={}", roleName);
+        return roleService.getRoleList(roleName);
     }
 
     /**

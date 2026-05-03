@@ -24,6 +24,14 @@ public interface RoleMapper {
     List<Role> selectAll();
 
     /**
+     * 按角色名称模糊查询
+     *
+     * @param roleName 角色名称
+     * @return 角色列表
+     */
+    List<Role> selectByRoleName(@Param("roleName") String roleName);
+
+    /**
      * 根据ID查询角色
      *
      * @param id 角色ID

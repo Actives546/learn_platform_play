@@ -23,6 +23,14 @@
         ORDER BY create_time ASC
     </select>
 
+    <select id="selectByRoleName" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM role
+        WHERE role_name LIKE CONCAT('%', #{roleName}, '%')
+        ORDER BY create_time ASC
+    </select>
+
     <select id="selectById" resultMap="BaseResultMap">
         SELECT 
         <include refid="Base_Column_List"/>

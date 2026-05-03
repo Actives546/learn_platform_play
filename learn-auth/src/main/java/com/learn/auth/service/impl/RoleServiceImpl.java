@@ -35,15 +35,22 @@ public class RoleServiceImpl implements RoleService {
     private final RoleMenuMapper roleMenuMapper;
 
     /**
-     * 获取所有角色列表
+     * 获取角色列表
+     * 支持按角色名称模糊查询
      *
+     * @param roleName 角色名称（可选，模糊查询）
      * @return 角色列表
      */
     @Override
-    public Result<List<Role>> getRoleList() {
-        log.info("获取角色列表");
+    public Result<List<Role>> getRoleList(String roleName) {
+        log.info("获取角色列表: roleName={}", roleName);
         
-        List<Role> roles = roleMapper.selectAll();
+        List<Role> roles;
+        if (roleName != null && !roleName.trim().isEmpty()) {
+            roles = roleMapper.selectByRoleName(roleName);
+        } else {
+            roles = roleMapper.selectAll();
+        }
         log.info("查询到角色总数: {}", roles.size());
         
         return Result.success("获取角色列表成功", roles);
