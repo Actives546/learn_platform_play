@@ -132,6 +132,7 @@ const TeacherPage = () => {
   const handleAdd = () => {
     setModalTitle('新增老师')
     setEditingUser(null)
+    form.resetFields()
     form.setFieldsValue({
       id: '',
       userName: '',
