@@ -103,6 +103,8 @@ const CoursePage = () => {
     } catch (error) {
       console.error('获取课程列表失败:', error)
       message.error('获取课程列表失败')
+      console.error('获取课程列表失败:', error)
+      message.error('获取课程列表失败')
     } finally {
       setLoading(false)
     }
