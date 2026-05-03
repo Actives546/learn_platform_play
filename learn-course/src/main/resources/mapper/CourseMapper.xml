@@ -106,26 +106,4 @@
         AND is_deleted = 0
     </update>
 
-    <select id="countTeachers" resultType="long">
-        SELECT COUNT(DISTINCT teacher_id)
-        FROM course
-        WHERE is_deleted = 0
-        AND teacher_id IS NOT NULL
-    </select>
-
-    <select id="countThisMonthNewCourses" resultType="long">
-        SELECT COUNT(*)
-        FROM course
-        WHERE is_deleted = 0
-        AND YEAR(create_time) = YEAR(CURRENT_DATE())
-        AND MONTH(create_time) = MONTH(CURRENT_DATE())
-    </select>
-
-    <select id="countByStatus" resultType="long">
-        SELECT COUNT(*)
-        FROM course
-        WHERE is_deleted = 0
-        AND status = #{status}
-    </select>
-
 </mapper>

@@ -92,27 +92,4 @@ public interface CourseMapper {
      * @return 受影响的行数
      */
     int updateStatusBatch(@Param("ids") List<Long> ids, @Param("status") Integer status);
-
-    /**
-     * 统计老师人数
-     * 统计作为讲师创建过课程的用户数量（去重）
-     *
-     * @return 老师人数
-     */
-    long countTeachers();
-
-    /**
-     * 统计本月新增课程数
-     *
-     * @return 本月新增课程数
-     */
-    long countThisMonthNewCourses();
-
-    /**
-     * 按状态统计课程数量
-     *
-     * @param status 课程状态
-     * @return 该状态的课程数量
-     */
-    long countByStatus(@Param("status") Integer status);
 }
