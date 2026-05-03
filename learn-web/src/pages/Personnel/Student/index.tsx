@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Card,
   Table,
@@ -38,14 +38,6 @@ import {
 const { Title } = Typography
 const { Option } = Select
 
-interface FetchParams {
-  userName?: string
-  status?: number
-  roleId?: number
-  pageNum?: number
-  pageSize?: number
-}
-
 const StudentPage = () => {
   const [loading, setLoading] = useState(false)
   const [userList, setUserList] = useState<User[]>([])
@@ -66,20 +58,42 @@ const StudentPage = () => {
   const [form] = Form.useForm()
   const hasInitRef = useRef(false)
 
-  const fetchUserList = useCallback(async (params?: FetchParams) => {
+  const fetchUserList = async (
+    userNameParam?: string,
+    statusParam?: number,
+    pageNumParam?: number,
+    pageSizeParam?: number
+  ) => {
     setLoading(true)
     try {
-      const requestParams = {
-        userName: params?.userName !== undefined ? params.userName || undefined : searchUserName || undefined,
-        status: params?.status !== undefined ? params.status : searchStatus,
+      const params: {
+        roleId: number
+        pageNum: number
+        pageSize: number
+        userName?: string
+        status?: number
+      } = {
         roleId: 3,
-        pageNum: params?.pageNum !== undefined ? params.pageNum : pageNum,
-        pageSize: params?.pageSize !== undefined ? params.pageSize : pageSize,
+        pageNum: pageNumParam !== undefined ? pageNumParam : pageNum,
+        pageSize: pageSizeParam !== undefined ? pageSizeParam : pageSize,
       }
+
+      const finalUserName = userNameParam !== undefined ? userNameParam : searchUserName
+      if (finalUserName && finalUserName.trim() !== '') {
+        params.userName = finalUserName.trim()
+      }
+
+      const finalStatus = statusParam !== undefined ? statusParam : searchStatus
+      if (finalStatus !== undefined) {
+        params.status = finalStatus
+      }
+
+      console.log('请求参数:', params)
       
-      const res = await getUserPage(requestParams)
+      const res = await getUserPage(params)
       if (res.code === 200 && res.data) {
         const pageResult = res.data as PageResult<User>
+        console.log('返回结果:', pageResult)
         setUserList(pageResult.records || [])
         setTotal(pageResult.total || 0)
       }
@@ -89,13 +103,13 @@ const StudentPage = () => {
     } finally {
       setLoading(false)
     }
-  }, [searchUserName, searchStatus, pageNum, pageSize])
+  }
 
   useEffect(() => {
     if (hasInitRef.current) return
     hasInitRef.current = true
     fetchUserList()
-  }, [fetchUserList])
+  }, [])
 
   useEffect(() => {
     if (hasInitRef.current) {
@@ -105,26 +119,14 @@ const StudentPage = () => {
 
   const handleSearch = () => {
     setPageNum(1)
-    fetchUserList({
-      userName: searchUserName,
-      status: searchStatus,
-      roleId: 3,
-      pageNum: 1,
-      pageSize: pageSize,
-    })
+    fetchUserList(searchUserName, searchStatus, 1, pageSize)
   }
 
   const handleReset = () => {
     setSearchUserName('')
     setSearchStatus(undefined)
     setPageNum(1)
-    fetchUserList({
-      userName: '',
-      status: undefined,
-      roleId: 3,
-      pageNum: 1,
-      pageSize: pageSize,
-    })
+    fetchUserList('', undefined, 1, pageSize)
   }
 
   const handleAdd = () => {
@@ -132,6 +134,11 @@ const StudentPage = () => {
     setEditingUser(null)
     form.resetFields()
     form.setFieldsValue({
+      userName: '',
+      nickName: '',
+      password: '',
+      phone: '',
+      email: '',
       status: 1,
       roleId: 3,
     })
@@ -145,8 +152,14 @@ const StudentPage = () => {
       const res = await getUserById(record.id)
       if (res.code === 200 && res.data) {
         form.setFieldsValue({
-          ...res.data,
+          id: res.data.id,
+          userName: res.data.userName,
+          nickName: res.data.nickName || '',
           password: '',
+          phone: res.data.phone || '',
+          email: res.data.email || '',
+          status: res.data.status,
+          roleId: res.data.roleId,
         })
         setModalVisible(true)
       }
