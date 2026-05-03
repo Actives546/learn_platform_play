@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.learn.course.mapper.TeachingPlanMapper">
+
+    <resultMap id="BaseResultMap" type="com.learn.common.entity.TeachingPlan">
+        <id column="id" property="id"/>
+        <result column="course_id" property="courseId"/>
+        <result column="plan_name" property="planName"/>
+        <result column="description" property="description"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="weekly_schedule" property="weeklySchedule"/>
+        <result column="progress" property="progress"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, course_id, plan_name, description, start_time, end_time, weekly_schedule, progress, status, create_time, update_time, is_deleted
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM teaching_plan
+        WHERE id = #{id} AND is_deleted = 0
+    </select>
+
+    <select id="selectByIds" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM teaching_plan
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND is_deleted = 0
+    </select>
+
+    <select id="selectByCourseId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM teaching_plan
+        WHERE course_id = #{courseId} AND is_deleted = 0
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectByCourseIdAndPlanName" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM teaching_plan
+        WHERE course_id = #{courseId}
+          AND plan_name = #{planName}
+          AND is_deleted = 0
+        LIMIT 1
+    </select>
+
+    <insert id="insert" parameterType="com.learn.common.entity.TeachingPlan" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO teaching_plan (
+            id, course_id, plan_name, description, start_time, end_time, weekly_schedule, progress, status, create_time, update_time, is_deleted
+        ) VALUES (
+            #{id}, #{courseId}, #{planName}, #{description}, #{startTime}, #{endTime}, #{weeklySchedule}, #{progress}, #{status}, #{createTime}, #{updateTime}, 0
+        )
+    </insert>
+
+    <update id="updateById" parameterType="com.learn.common.entity.TeachingPlan">
+        UPDATE teaching_plan
+        <set>
+            <if test="courseId != null">course_id = #{courseId},</if>
+            <if test="planName != null">plan_name = #{planName},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="endTime != null">end_time = #{endTime},</if>
+            <if test="weeklySchedule != null">weekly_schedule = #{weeklySchedule},</if>
+            <if test="progress != null">progress = #{progress},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime}</if>
+        </set>
+        WHERE id = #{id} AND is_deleted = 0
+    </update>
+
+    <update id="deleteById">
+        UPDATE teaching_plan
+        SET is_deleted = 1,
+            update_time = NOW()
+        WHERE id = #{id} AND is_deleted = 0
+    </update>
+
+    <select id="countTotal" resultType="long">
+        SELECT COUNT(*)
+        FROM teaching_plan
+        WHERE is_deleted = 0
+        <if test="courseId != null">
+            AND course_id = #{courseId}
+        </if>
+        <if test="planName != null and planName != ''">
+            AND plan_name LIKE CONCAT('%', #{planName}, '%')
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+    </select>
+
+    <select id="selectPage" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM teaching_plan
+        WHERE is_deleted = 0
+        <if test="courseId != null">
+            AND course_id = #{courseId}
+        </if>
+        <if test="planName != null and planName != ''">
+            AND plan_name LIKE CONCAT('%', #{planName}, '%')
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+</mapper>
