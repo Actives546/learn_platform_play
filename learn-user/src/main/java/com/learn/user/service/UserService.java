@@ -57,12 +57,4 @@ public interface UserService {
      * @return 删除结果
      */
     Result<Void> deleteUser(Long id);
-
-    /**
-     * 确认删除用户（二次确认）
-     *
-     * @param id 用户ID
-     * @return 删除结果
-     */
-    Result<Void> confirmDeleteUser(Long id);
 }

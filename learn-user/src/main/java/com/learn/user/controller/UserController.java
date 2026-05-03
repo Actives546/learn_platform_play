@@ -82,26 +82,14 @@ public class UserController {
     }
 
     /**
-     * 删除用户接口（首次调用，返回确认信息）
+     * 删除用户接口
      *
      * @param id 用户ID
-     * @return 删除确认信息
+     * @return 删除结果
      */
     @DeleteMapping("/{id}")
     public Result<Void> deleteUser(@PathVariable Long id) {
         log.info("收到删除用户请求: id={}", id);
         return userService.deleteUser(id);
-    }
-
-    /**
-     * 确认删除用户接口（二次确认）
-     *
-     * @param id 用户ID
-     * @return 删除结果
-     */
-    @DeleteMapping("/confirm/{id}")
-    public Result<Void> confirmDeleteUser(@PathVariable Long id) {
-        log.info("收到确认删除用户请求: id={}", id);
-        return userService.confirmDeleteUser(id);
     }
 }

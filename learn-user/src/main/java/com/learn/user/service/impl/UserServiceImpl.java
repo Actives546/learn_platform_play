@@ -1,5 +1,6 @@
 package com.learn.user.service.impl;
 
+import cn.hutool.crypto.digest.BCrypt;
 import com.learn.common.entity.User;
 import com.learn.common.exception.BusinessException;
 import com.learn.common.result.PageResult;
@@ -113,6 +114,7 @@ public class UserServiceImpl implements UserService {
         user.setId(IdGenerator.nextId());
         user.setCreateTime(LocalDateTime.now());
         user.setUpdateTime(LocalDateTime.now());
+        user.setPassword(BCrypt.hashpw(user.getPassword()));
 
         userMapper.insert(user);
         log.info("新增用户成功: id={}, userName={}", user.getId(), user.getUserName());
@@ -163,26 +165,6 @@ public class UserServiceImpl implements UserService {
     @Transactional(rollbackFor = Exception.class)
     public Result<Void> deleteUser(Long id) {
         log.info("删除用户: id={}", id);
-
-        User user = userMapper.selectById(id);
-        if (user == null) {
-            log.warn("用户不存在: id={}", id);
-            throw BusinessException.of("用户不存在");
-        }
-
-        return Result.success("请确认是否删除用户：" + user.getUserName(), null);
-    }
-
-    /**
-     * 确认删除用户（二次确认）
-     *
-     * @param id 用户ID
-     * @return 删除结果
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public Result<Void> confirmDeleteUser(Long id) {
-        log.info("确认删除用户: id={}", id);
 
         User user = userMapper.selectById(id);
         if (user == null) {
