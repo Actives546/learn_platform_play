@@ -15,6 +15,8 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 课程服务实现类
@@ -188,10 +190,33 @@ public class CourseServiceImpl implements CourseService {
             throw BusinessException.of("状态值不合法，只能是0(草稿)、1(已上架)、2(已下架)");
         }
 
+        validateIdsExist(ids);
+
         courseMapper.updateStatusBatch(ids, status);
         log.info("批量更新课程状态成功，共更新 {} 条记录", ids.size());
 
         return Result.success("批量更新课程状态成功", null);
+    }
+
+    /**
+     * 校验课程ID列表是否都存在
+     *
+     * @param ids 课程ID列表
+     */
+    private void validateIdsExist(List<Long> ids) {
+        List<Course> existingCourses = courseMapper.selectByIds(ids);
+        Set<Long> existingIds = existingCourses.stream()
+                .map(Course::getId)
+                .collect(Collectors.toSet());
+
+        List<Long> nonExistentIds = ids.stream()
+                .filter(id -> !existingIds.contains(id))
+                .collect(Collectors.toList());
+
+        if (!nonExistentIds.isEmpty()) {
+            log.warn("以下课程ID不存在: {}", nonExistentIds);
+            throw BusinessException.of("课程ID不存在: " + nonExistentIds);
+        }
     }
 
     /**
