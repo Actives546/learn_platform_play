@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.learn.course.mapper.ChapterMapper">
+
+    <resultMap id="BaseResultMap" type="com.learn.common.entity.Chapter">
+        <id column="id" property="id"/>
+        <result column="course_id" property="courseId"/>
+        <result column="chapter_name" property="chapterName"/>
+        <result column="description" property="description"/>
+        <result column="sort" property="sort"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, course_id, chapter_name, description, sort, create_time, update_time, is_deleted
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM chapter
+        WHERE id = #{id} AND is_deleted = 0
+    </select>
+
+    <select id="selectByIds" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM chapter
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND is_deleted = 0
+    </select>
+
+    <select id="selectByCourseId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM chapter
+        WHERE course_id = #{courseId} AND is_deleted = 0
+        ORDER BY create_time DESC
+    </select>
+
+    <insert id="insert" parameterType="com.learn.common.entity.Chapter" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO chapter (
+            id, course_id, chapter_name, description, sort, create_time, update_time, is_deleted
+        ) VALUES (
+            #{id}, #{courseId}, #{chapterName}, #{description}, #{sort}, #{createTime}, #{updateTime}, 0
+        )
+    </insert>
+
+    <update id="updateById" parameterType="com.learn.common.entity.Chapter">
+        UPDATE chapter
+        <set>
+            <if test="courseId != null">course_id = #{courseId},</if>
+            <if test="chapterName != null">chapter_name = #{chapterName},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="updateTime != null">update_time = #{updateTime}</if>
+        </set>
+        WHERE id = #{id} AND is_deleted = 0
+    </update>
+
+    <update id="deleteById">
+        UPDATE chapter
+        SET is_deleted = 1,
+            update_time = NOW()
+        WHERE id = #{id} AND is_deleted = 0
+    </update>
+
+    <select id="countTotal" resultType="long">
+        SELECT COUNT(*)
+        FROM chapter
+        WHERE is_deleted = 0
+        <if test="courseId != null">
+            AND course_id = #{courseId}
+        </if>
+        <if test="chapterName != null and chapterName != ''">
+            AND chapter_name LIKE CONCAT('%', #{chapterName}, '%')
+        </if>
+    </select>
+
+    <select id="selectPage" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM chapter
+        WHERE is_deleted = 0
+        <if test="courseId != null">
+            AND course_id = #{courseId}
+        </if>
+        <if test="chapterName != null and chapterName != ''">
+            AND chapter_name LIKE CONCAT('%', #{chapterName}, '%')
+        </if>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+</mapper>
