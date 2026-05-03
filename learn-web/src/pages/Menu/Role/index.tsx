@@ -22,7 +22,7 @@ import {
   DeleteOutlined,
   PlusOutlined,
   SafetyOutlined,
-  UnorderedListOutlined,
+  SearchOutlined,
 } from '@ant-design/icons'
 import {
   getRoleList,
@@ -37,12 +37,14 @@ import {
   getMenuList,
   Menu,
 } from '@/api/menu'
+import MenuTreeNode from '@/components/MenuTreeNode'
 
 const { Title } = Typography
-const { TextArea } = Input
+const { TextArea, Search } = Input
 
 const RoleManagementPage = () => {
   const [roleList, setRoleList] = useState<Role[]>([])
+  const [filteredRoleList, setFilteredRoleList] = useState<Role[]>([])
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
   const [treeData, setTreeData] = useState<any[]>([])
   const [checkedKeys, setCheckedKeys] = useState<React.Key[]>([])
@@ -52,32 +54,28 @@ const RoleManagementPage = () => {
   const [modalVisible, setModalVisible] = useState(false)
   const [modalTitle, setModalTitle] = useState('新增角色')
   const [editingRole, setEditingRole] = useState<Role | null>(null)
+  const [searchKeyword, setSearchKeyword] = useState('')
   const [form] = Form.useForm()
   const hasInitRef = useRef(false)
 
   const buildTreeData = (menus: Menu[]) => {
     const nodeMap = new Map<number, any>()
 
-    // 先创建所有节点
     menus.forEach(menu => {
       nodeMap.set(menu.id, {
         key: menu.id,
         title: (
-          <span>
-            <UnorderedListOutlined style={{ marginRight: 8 }} />
-            {menu.menuName}
-            {menu.menuType === 1 && <Tag color="blue" style={{ marginLeft: 8 }}>目录</Tag>}
-            {menu.menuType === 2 && <Tag color="green" style={{ marginLeft: 8 }}>菜单</Tag>}
-            {menu.menuType === 3 && <Tag color="orange" style={{ marginLeft: 8 }}>按钮</Tag>}
-            {menu.status === 0 && <Tag color="red" style={{ marginLeft: 8 }}>禁用</Tag>}
-          </span>
+          <MenuTreeNode
+            menuName={menu.menuName}
+            menuType={menu.menuType}
+            status={menu.status}
+          />
         ),
         disabled: menu.status === 0,
         children: [],
       })
     })
 
-    // 再按 parentId 组装树
     const roots: any[] = []
     menus.forEach(menu => {
       const node = nodeMap.get(menu.id)!
@@ -131,10 +129,7 @@ const RoleManagementPage = () => {
       const res = await getRoleList()
       if (res.code === 200 && res.data) {
         setRoleList(res.data)
-        // 数据加载完成后自动选中第一个角色
-        if (res.data.length > 0) {
-          setSelectedRole(res.data[0])
-        }
+        setFilteredRoleList(res.data)
       }
     } catch (error) {
       console.error('获取角色列表失败:', error)
@@ -144,7 +139,22 @@ const RoleManagementPage = () => {
     }
   }
 
-  // 只执行一次的初始化加载
+  const filterRoleList = (keyword: string) => {
+    if (!keyword.trim()) {
+      setFilteredRoleList(roleList)
+      return
+    }
+    const filtered = roleList.filter(role =>
+      role.roleName.toLowerCase().includes(keyword.toLowerCase())
+    )
+    setFilteredRoleList(filtered)
+  }
+
+  const handleSearch = (value: string) => {
+    setSearchKeyword(value)
+    filterRoleList(value)
+  }
+
   useEffect(() => {
     if (hasInitRef.current) return
     hasInitRef.current = true
@@ -152,14 +162,19 @@ const RoleManagementPage = () => {
     fetchRoleList()
   }, [])
 
-  // selectedRole 变化时加载其关联的菜单权限
   const selectedRoleId = selectedRole?.id
 
   useEffect(() => {
     if (selectedRoleId) {
       fetchRoleMenuIds(selectedRoleId)
+    } else {
+      setCheckedKeys([])
     }
   }, [selectedRoleId])
+
+  useEffect(() => {
+    filterRoleList(searchKeyword)
+  }, [roleList])
 
   const handleRoleSelect = (role: Role) => {
     if (selectedRole?.id !== role.id) {
@@ -168,8 +183,7 @@ const RoleManagementPage = () => {
   }
 
   const handleCheck = (checkedKeysValue: any, _info: any) => {
-    const keys = Array.isArray(checkedKeysValue) ? checkedKeysValue : checkedKeysValue.checked
-    setCheckedKeys(keys || [])
+    setCheckedKeys(checkedKeysValue)
   }
 
   const handleGrantMenus = async () => {
@@ -179,10 +193,13 @@ const RoleManagementPage = () => {
     }
     setGrantLoading(true)
     try {
-      const menuIds = checkedKeys.map(key => Number(key))
+      const menuIds = checkedKeys.checked
+        ? checkedKeys.checked.map((key: React.Key) => Number(key))
+        : checkedKeys.map((key: React.Key) => Number(key))
       const res = await grantMenus(selectedRole.id, menuIds)
       if (res.code === 200) {
         message.success('授权成功')
+        await fetchRoleMenuIds(selectedRole.id)
       }
     } catch (error) {
       console.error('授权失败:', error)
@@ -224,7 +241,7 @@ const RoleManagementPage = () => {
           setSelectedRole(null)
           setCheckedKeys([])
         }
-        fetchRoleList()
+        await fetchRoleList()
       }
     } catch (error) {
       console.error('删除角色失败:', error)
@@ -287,7 +304,7 @@ const RoleManagementPage = () => {
               />
             </Space>
           }
-          style={{ width: 300, flexShrink: 0, maxHeight: 'calc(100vh - 160px)' }}
+          style={{ width: 320, flexShrink: 0, maxHeight: 'calc(100vh - 160px)' }}
           bodyStyle={{ overflow: 'auto', padding: 0 }}
           extra={
             <Button
@@ -302,79 +319,94 @@ const RoleManagementPage = () => {
         >
           <Spin spinning={roleLoading}>
             <div style={{ padding: 16 }}>
-            <List
-              dataSource={roleList}
-              locale={{ emptyText: '暂无角色数据' }}
-              renderItem={(role) => (
-                <List.Item
-                  style={{
-                    padding: 12,
-                    marginBottom: 8,
-                    borderRadius: 6,
-                    cursor: 'pointer',
-                    backgroundColor: selectedRole?.id === role.id ? '#e6f7ff' : '#fff',
-                    border: selectedRole?.id === role.id ? '1px solid #1890ff' : '1px solid #f0f0f0',
+              <div style={{ marginBottom: 16 }}>
+                <Search
+                  placeholder="请输入角色名称搜索"
+                  allowClear
+                  enterButton={<SearchOutlined />}
+                  onSearch={handleSearch}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    setSearchKeyword(value)
+                    if (!value) {
+                      filterRoleList('')
+                    }
                   }}
-                  onClick={() => handleRoleSelect(role)}
-                  actions={[
-                    <Button
-                      key="edit"
-                      type="text"
-                      size="small"
-                      icon={<EditOutlined />}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleEdit(role)
-                      }}
-                    >
-                      编辑
-                    </Button>,
-                    <Popconfirm
-                      key="delete"
-                      title="确定要删除该角色吗？"
-                      description="删除后无法恢复，请谨慎操作"
-                      onConfirm={(e) => {
-                        e?.stopPropagation()
-                        handleDelete(role)
-                      }}
-                      okText="确定"
-                      cancelText="取消"
-                    >
+                />
+              </div>
+              <List
+                dataSource={filteredRoleList}
+                locale={{ emptyText: searchKeyword ? '未找到匹配的角色' : '暂无角色数据' }}
+                renderItem={(role) => (
+                  <List.Item
+                    style={{
+                      padding: 12,
+                      marginBottom: 8,
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                      backgroundColor: selectedRole?.id === role.id ? '#e6f7ff' : '#fff',
+                      border: selectedRole?.id === role.id ? '1px solid #1890ff' : '1px solid #f0f0f0',
+                    }}
+                    onClick={() => handleRoleSelect(role)}
+                    actions={[
                       <Button
+                        key="edit"
                         type="text"
                         size="small"
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={(e) => e.stopPropagation()}
+                        icon={<EditOutlined />}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleEdit(role)
+                        }}
                       >
-                        删除
-                      </Button>
-                    </Popconfirm>,
-                  ]}
-                >
-                  <List.Item.Meta
-                    title={
-                      <Space>
-                        <span style={{ fontWeight: 500 }}>{role.roleName}</span>
-                        <Tag color={getStatusColor(role.status)}>{getStatusText(role.status)}</Tag>
-                      </Space>
-                    }
-                    description={
-                      <div>
-                        <div style={{ fontSize: 12, color: '#666' }}>
-                          编码: {role.roleCode}
-                        </div>
-                        {role.description && (
-                          <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>
-                            {role.description}
+                        编辑
+                      </Button>,
+                      <Popconfirm
+                        key="delete"
+                        title="确定要删除该角色吗？"
+                        description="删除后无法恢复，请谨慎操作"
+                        onConfirm={(e) => {
+                          e?.stopPropagation()
+                          handleDelete(role)
+                        }}
+                        okText="确定"
+                        cancelText="取消"
+                      >
+                        <Button
+                          type="text"
+                          size="small"
+                          danger
+                          icon={<DeleteOutlined />}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          删除
+                        </Button>
+                      </Popconfirm>,
+                    ]}
+                  >
+                    <List.Item.Meta
+                      title={
+                        <Space>
+                          <span style={{ fontWeight: 500 }}>{role.roleName}</span>
+                          <Tag color={getStatusColor(role.status)}>{getStatusText(role.status)}</Tag>
+                        </Space>
+                      }
+                      description={
+                        <div>
+                          <div style={{ fontSize: 12, color: '#666' }}>
+                            编码: {role.roleCode}
                           </div>
-                        )}
-                      </div>
-                    }
-                  />
-                </List.Item>
-              )}
-            />
+                          {role.description && (
+                            <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>
+                              {role.description}
+                            </div>
+                          )}
+                        </div>
+                      }
+                    />
+                  </List.Item>
+                )}
+              />
             </div>
           </Spin>
         </Card>
@@ -411,7 +443,11 @@ const RoleManagementPage = () => {
                     <span style={{ fontWeight: 500 }}>{selectedRole.roleName}</span>
                     <span style={{ color: '#666' }}>|</span>
                     <span style={{ color: '#666' }}>已选择:</span>
-                    <Tag color="green">{checkedKeys.length} 个菜单</Tag>
+                    <Tag color="green">
+                      {Array.isArray(checkedKeys)
+                        ? checkedKeys.length
+                        : checkedKeys.checked?.length || 0} 个菜单
+                    </Tag>
                   </Space>
                 </div>
                 {treeData.length > 0 ? (
@@ -422,7 +458,6 @@ const RoleManagementPage = () => {
                     onCheck={handleCheck}
                     treeData={treeData}
                     className="menu-tree"
-                    checkStrictly
                   />
                 ) : (
                   <div style={{ textAlign: 'center', padding: 50, color: '#999' }}>
