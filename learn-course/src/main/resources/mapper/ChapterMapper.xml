@@ -43,6 +43,16 @@
         ORDER BY create_time DESC
     </select>
 
+    <select id="selectByCourseIdAndChapterName" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM chapter
+        WHERE course_id = #{courseId}
+          AND chapter_name = #{chapterName}
+          AND is_deleted = 0
+        LIMIT 1
+    </select>
+
     <insert id="insert" parameterType="com.learn.common.entity.Chapter" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO chapter (
             id, course_id, chapter_name, description, sort, create_time, update_time, is_deleted

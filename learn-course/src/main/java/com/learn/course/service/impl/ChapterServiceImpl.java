@@ -78,6 +78,10 @@ public class ChapterServiceImpl implements ChapterService {
     public Result<Chapter> getChapterById(Long id) {
         log.info("获取章节详情: id={}", id);
 
+        if (id == null) {
+            throw BusinessException.of("章节ID不能为空");
+        }
+
         Chapter chapter = chapterMapper.selectById(id);
         if (chapter == null) {
             log.warn("章节不存在: id={}", id);
@@ -152,6 +156,10 @@ public class ChapterServiceImpl implements ChapterService {
     public Result<Void> updateChapter(Chapter chapter) {
         log.info("更新章节: id={}", chapter.getId());
 
+        if (chapter.getId() == null) {
+            throw BusinessException.of("章节ID不能为空");
+        }
+
         Chapter existChapter = chapterMapper.selectById(chapter.getId());
         if (existChapter == null) {
             log.warn("章节不存在: id={}", chapter.getId());
@@ -184,6 +192,10 @@ public class ChapterServiceImpl implements ChapterService {
     @Transactional(rollbackFor = Exception.class)
     public Result<Void> deleteChapter(Long id) {
         log.info("删除章节: id={}", id);
+
+        if (id == null) {
+            throw BusinessException.of("章节ID不能为空");
+        }
 
         Chapter chapter = chapterMapper.selectById(id);
         if (chapter == null) {
@@ -218,6 +230,14 @@ public class ChapterServiceImpl implements ChapterService {
         }
         if (chapter.getChapterName().length() > 200) {
             throw BusinessException.of("章节名称长度不能超过200个字符");
+        }
+
+        Chapter existChapter = chapterMapper.selectByCourseIdAndChapterName(
+                chapter.getCourseId(), chapter.getChapterName());
+        if (existChapter != null) {
+            log.warn("同一课程下章节名称已存在: courseId={}, chapterName={}",
+                    chapter.getCourseId(), chapter.getChapterName());
+            throw BusinessException.of("同一课程下章节名称不能重复");
         }
     }
 }
