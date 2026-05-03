@@ -73,4 +73,11 @@ public class Course implements Serializable {
      * 更新时间
      */
     private LocalDateTime updateTime;
+
+    /**
+     * 逻辑删除标志
+     * 0 - 未删除
+     * 1 - 已删除
+     */
+    private Integer isDeleted;
 }

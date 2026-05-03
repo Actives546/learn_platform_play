@@ -25,6 +25,14 @@ public interface CourseMapper {
     Course selectById(@Param("id") Long id);
 
     /**
+     * 根据ID列表批量查询课程
+     *
+     * @param ids 课程ID列表
+     * @return 课程列表
+     */
+    List<Course> selectByIds(@Param("ids") List<Long> ids);
+
+    /**
      * 插入新课程
      *
      * @param course 课程实体对象

@@ -13,24 +13,36 @@
         <result column="sort" property="sort"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
+        <result column="is_deleted" property="isDeleted"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, course_name, cover, description, teacher_id, lesson_count, status, sort, create_time, update_time
+        id, course_name, cover, description, teacher_id, lesson_count, status, sort, create_time, update_time, is_deleted
     </sql>
 
     <select id="selectById" resultMap="BaseResultMap">
         SELECT
         <include refid="Base_Column_List"/>
         FROM course
-        WHERE id = #{id}
+        WHERE id = #{id} AND is_deleted = 0
+    </select>
+
+    <select id="selectByIds" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM course
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND is_deleted = 0
     </select>
 
     <insert id="insert" parameterType="com.learn.common.entity.Course" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO course (
-            id, course_name, cover, description, teacher_id, lesson_count, status, sort, create_time, update_time
+            id, course_name, cover, description, teacher_id, lesson_count, status, sort, create_time, update_time, is_deleted
         ) VALUES (
-            #{id}, #{courseName}, #{cover}, #{description}, #{teacherId}, #{lessonCount}, #{status}, #{sort}, #{createTime}, #{updateTime}
+            #{id}, #{courseName}, #{cover}, #{description}, #{teacherId}, #{lessonCount}, #{status}, #{sort}, #{createTime}, #{updateTime}, 0
         )
     </insert>
 
@@ -46,39 +58,39 @@
             <if test="sort != null">sort = #{sort},</if>
             <if test="updateTime != null">update_time = #{updateTime}</if>
         </set>
-        WHERE id = #{id}
+        WHERE id = #{id} AND is_deleted = 0
     </update>
 
-    <delete id="deleteById">
-        DELETE FROM course
-        WHERE id = #{id}
-    </delete>
+    <update id="deleteById">
+        UPDATE course
+        SET is_deleted = 1,
+            update_time = NOW()
+        WHERE id = #{id} AND is_deleted = 0
+    </update>
 
     <select id="countTotal" resultType="long">
         SELECT COUNT(*)
         FROM course
-        <where>
-            <if test="courseName != null and courseName != ''">
-                AND course_name LIKE CONCAT('%', #{courseName}, '%')
-            </if>
-            <if test="status != null">
-                AND status = #{status}
-            </if>
-        </where>
+        WHERE is_deleted = 0
+        <if test="courseName != null and courseName != ''">
+            AND course_name LIKE CONCAT('%', #{courseName}, '%')
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
     </select>
 
     <select id="selectPage" resultMap="BaseResultMap">
         SELECT
         <include refid="Base_Column_List"/>
         FROM course
-        <where>
-            <if test="courseName != null and courseName != ''">
-                AND course_name LIKE CONCAT('%', #{courseName}, '%')
-            </if>
-            <if test="status != null">
-                AND status = #{status}
-            </if>
-        </where>
+        WHERE is_deleted = 0
+        <if test="courseName != null and courseName != ''">
+            AND course_name LIKE CONCAT('%', #{courseName}, '%')
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
         ORDER BY sort ASC, create_time DESC
         LIMIT #{offset}, #{pageSize}
     </select>
@@ -91,6 +103,7 @@
         <foreach collection="ids" item="id" open="(" separator="," close=")">
             #{id}
         </foreach>
+        AND is_deleted = 0
     </update>
 
 </mapper>
