@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   Card,
   Table,
@@ -12,8 +12,7 @@ import {
   Input,
   Select,
   Typography,
-  Popconfirm,
-  InputNumber,
+  Descriptions,
 } from 'antd'
 import {
   ReloadOutlined,
@@ -23,6 +22,7 @@ import {
   UserOutlined,
   SearchOutlined,
   EyeOutlined,
+  ExclamationCircleOutlined,
 } from '@ant-design/icons'
 import {
   getUserPage,
@@ -38,6 +38,14 @@ import {
 const { Title } = Typography
 const { Option } = Select
 
+interface FetchParams {
+  userName?: string
+  status?: number
+  roleId?: number
+  pageNum?: number
+  pageSize?: number
+}
+
 const StudentPage = () => {
   const [loading, setLoading] = useState(false)
   const [userList, setUserList] = useState<User[]>([])
@@ -51,19 +59,25 @@ const StudentPage = () => {
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [detailVisible, setDetailVisible] = useState(false)
   const [detailUser, setDetailUser] = useState<User | null>(null)
+  const [deleteVisible, setDeleteVisible] = useState(false)
+  const [deletingUserId, setDeletingUserId] = useState<number | null>(null)
+  const [deletingUserName, setDeletingUserName] = useState('')
+  const [deleteLoading, setDeleteLoading] = useState(false)
   const [form] = Form.useForm()
   const hasInitRef = useRef(false)
 
-  const fetchUserList = async () => {
+  const fetchUserList = useCallback(async (params?: FetchParams) => {
     setLoading(true)
     try {
-      const res = await getUserPage({
-        userName: searchUserName || undefined,
-        status: searchStatus,
+      const requestParams = {
+        userName: params?.userName !== undefined ? params.userName || undefined : searchUserName || undefined,
+        status: params?.status !== undefined ? params.status : searchStatus,
         roleId: 3,
-        pageNum,
-        pageSize,
-      })
+        pageNum: params?.pageNum !== undefined ? params.pageNum : pageNum,
+        pageSize: params?.pageSize !== undefined ? params.pageSize : pageSize,
+      }
+      
+      const res = await getUserPage(requestParams)
       if (res.code === 200 && res.data) {
         const pageResult = res.data as PageResult<User>
         setUserList(pageResult.records || [])
@@ -75,28 +89,42 @@ const StudentPage = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [searchUserName, searchStatus, pageNum, pageSize])
 
   useEffect(() => {
     if (hasInitRef.current) return
     hasInitRef.current = true
     fetchUserList()
-  }, [])
+  }, [fetchUserList])
 
   useEffect(() => {
-    fetchUserList()
+    if (hasInitRef.current) {
+      fetchUserList()
+    }
   }, [pageNum, pageSize])
 
   const handleSearch = () => {
     setPageNum(1)
-    fetchUserList()
+    fetchUserList({
+      userName: searchUserName,
+      status: searchStatus,
+      roleId: 3,
+      pageNum: 1,
+      pageSize: pageSize,
+    })
   }
 
   const handleReset = () => {
     setSearchUserName('')
     setSearchStatus(undefined)
     setPageNum(1)
-    fetchUserList()
+    fetchUserList({
+      userName: '',
+      status: undefined,
+      roleId: 3,
+      pageNum: 1,
+      pageSize: pageSize,
+    })
   }
 
   const handleAdd = () => {
@@ -141,16 +169,28 @@ const StudentPage = () => {
     }
   }
 
-  const handleDelete = async (id: number) => {
+  const handleDeleteClick = (record: User) => {
+    setDeletingUserId(record.id)
+    setDeletingUserName(record.userName)
+    setDeleteVisible(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingUserId) return
+    
+    setDeleteLoading(true)
     try {
-      const res = await deleteUser(id)
+      const res = await deleteUser(deletingUserId)
       if (res.code === 200) {
         message.success('删除成功')
+        setDeleteVisible(false)
         fetchUserList()
       }
     } catch (error) {
       console.error('删除学生失败:', error)
       message.error('删除学生失败')
+    } finally {
+      setDeleteLoading(false)
     }
   }
 
@@ -164,6 +204,9 @@ const StudentPage = () => {
       
       if (editingUser) {
         userData.id = editingUser.id
+        if (!userData.password || userData.password.trim() === '') {
+          delete userData.password
+        }
         const res = await updateUser(userData)
         if (res.code === 200) {
           message.success('更新成功')
@@ -196,31 +239,38 @@ const StudentPage = () => {
       title: '用户名',
       dataIndex: 'userName',
       key: 'userName',
-      width: 150,
+      width: 120,
+      ellipsis: true,
     },
     {
       title: '昵称',
       dataIndex: 'nickName',
       key: 'nickName',
-      width: 120,
+      width: 100,
+      ellipsis: true,
+      render: (text: string) => text || '-',
     },
     {
       title: '手机号',
       dataIndex: 'phone',
       key: 'phone',
-      width: 130,
+      width: 120,
+      ellipsis: true,
+      render: (text: string) => text || '-',
     },
     {
       title: '邮箱',
       dataIndex: 'email',
       key: 'email',
-      width: 180,
+      width: 160,
+      ellipsis: true,
+      render: (text: string) => text || '-',
     },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
-      width: 100,
+      width: 80,
       render: (status: number) => (
         <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>
       ),
@@ -229,12 +279,13 @@ const StudentPage = () => {
       title: '创建时间',
       dataIndex: 'createTime',
       key: 'createTime',
-      width: 180,
+      width: 160,
+      ellipsis: true,
     },
     {
       title: '操作',
       key: 'action',
-      width: 220,
+      width: 180,
       fixed: 'right' as const,
       render: (_: unknown, record: User) => (
         <Space size="small">
@@ -254,22 +305,15 @@ const StudentPage = () => {
           >
             编辑
           </Button>
-          <Popconfirm
-            title="确定要删除该学生吗？"
-            description="删除后无法恢复，请谨慎操作"
-            onConfirm={() => handleDelete(record.id)}
-            okText="确定"
-            cancelText="取消"
+          <Button
+            type="link"
+            size="small"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDeleteClick(record)}
           >
-            <Button
-              type="link"
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-            >
-              删除
-            </Button>
-          </Popconfirm>
+            删除
+          </Button>
         </Space>
       ),
     },
@@ -305,17 +349,18 @@ const StudentPage = () => {
             <span style={{ color: '#666' }}>用户名：</span>
             <Input
               placeholder="请输入用户名"
-              style={{ width: 200 }}
+              style={{ width: 180 }}
               value={searchUserName}
               onChange={(e) => setSearchUserName(e.target.value)}
               onPressEnter={handleSearch}
+              allowClear
             />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ color: '#666' }}>状态：</span>
             <Select
               placeholder="全部状态"
-              style={{ width: 150 }}
+              style={{ width: 130 }}
               allowClear
               value={searchStatus}
               onChange={(value) => setSearchStatus(value)}
@@ -359,7 +404,7 @@ const StudentPage = () => {
             dataSource={userList}
             rowKey="id"
             pagination={paginationConfig}
-            scroll={{ x: 1100 }}
+            scroll={{ x: 920 }}
             locale={{ emptyText: '暂无学生数据' }}
           />
         </Spin>
@@ -370,8 +415,10 @@ const StudentPage = () => {
         open={modalVisible}
         onOk={handleModalOk}
         onCancel={() => setModalVisible(false)}
-        width={600}
+        width={580}
         destroyOnClose
+        okText="确定"
+        cancelText="取消"
       >
         <Form
           form={form}
@@ -386,7 +433,7 @@ const StudentPage = () => {
             name="roleId"
             hidden
           >
-            <InputNumber />
+            <Input />
           </Form.Item>
 
           <div style={{ display: 'flex', gap: 16 }}>
@@ -463,7 +510,11 @@ const StudentPage = () => {
         title="学生详情"
         open={detailVisible}
         onCancel={() => setDetailVisible(false)}
-        footer={null}
+        footer={[
+          <Button key="close" onClick={() => setDetailVisible(false)}>
+            关闭
+          </Button>,
+        ]}
         width={500}
       >
         {detailUser && (
@@ -471,58 +522,64 @@ const StudentPage = () => {
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
               <div
                 style={{
-                  width: 80,
-                  height: 80,
+                  width: 72,
+                  height: 72,
                   borderRadius: '50%',
                   backgroundColor: '#1890ff',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#fff',
-                  fontSize: 32,
+                  fontSize: 28,
                 }}
               >
                 <UserOutlined />
               </div>
             </div>
 
-            <Table
-              dataSource={[
-                { key: '1', label: '用户名', value: detailUser.userName },
-                { key: '2', label: '昵称', value: detailUser.nickName || '-' },
-                { key: '3', label: '手机号', value: detailUser.phone || '-' },
-                { key: '4', label: '邮箱', value: detailUser.email || '-' },
-                {
-                  key: '5',
-                  label: '状态',
-                  value: (
-                    <Tag color={getStatusColor(detailUser.status)}>
-                      {getStatusText(detailUser.status)}
-                    </Tag>
-                  ),
-                },
-                { key: '6', label: '创建时间', value: detailUser.createTime || '-' },
-                { key: '7', label: '更新时间', value: detailUser.updateTime || '-' },
-              ]}
-              columns={[
-                {
-                  title: '属性',
-                  dataIndex: 'label',
-                  key: 'label',
-                  width: 120,
-                  render: (text: string) => <span style={{ fontWeight: 500, color: '#666' }}>{text}</span>,
-                },
-                {
-                  title: '值',
-                  dataIndex: 'value',
-                  key: 'value',
-                },
-              ]}
-              pagination={false}
-              showHeader={false}
-            />
+            <Descriptions bordered column={1} size="small">
+              <Descriptions.Item label="用户名">{detailUser.userName}</Descriptions.Item>
+              <Descriptions.Item label="昵称">{detailUser.nickName || '-'}</Descriptions.Item>
+              <Descriptions.Item label="手机号">{detailUser.phone || '-'}</Descriptions.Item>
+              <Descriptions.Item label="邮箱">{detailUser.email || '-'}</Descriptions.Item>
+              <Descriptions.Item label="状态">
+                <Tag color={getStatusColor(detailUser.status)}>
+                  {getStatusText(detailUser.status)}
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="创建时间">{detailUser.createTime || '-'}</Descriptions.Item>
+              <Descriptions.Item label="更新时间">{detailUser.updateTime || '-'}</Descriptions.Item>
+            </Descriptions>
           </div>
         )}
+      </Modal>
+
+      <Modal
+        title={
+          <Space>
+            <ExclamationCircleOutlined style={{ color: '#ff4d4f', fontSize: 20 }} />
+            <span>删除确认</span>
+          </Space>
+        }
+        open={deleteVisible}
+        onOk={handleDeleteConfirm}
+        onCancel={() => setDeleteVisible(false)}
+        confirmLoading={deleteLoading}
+        okText="确定删除"
+        cancelText="取消"
+        okButtonProps={{ danger: true }}
+        width={420}
+        centered
+      >
+        <div style={{ padding: '8px 0' }}>
+          <div style={{ marginBottom: 16, fontSize: 15, color: '#333' }}>
+            确定要删除学生 <span style={{ color: '#ff4d4f', fontWeight: 600 }}>"{deletingUserName}"</span> 吗？
+          </div>
+          <div style={{ fontSize: 13, color: '#999', padding: 12, backgroundColor: '#fff2f0', borderRadius: 6, border: '1px solid #ffccc7' }}>
+            <div style={{ fontWeight: 500, color: '#666', marginBottom: 4 }}>⚠️ 警告</div>
+            <div>删除后数据将无法恢复，请谨慎操作！</div>
+          </div>
+        </div>
       </Modal>
     </div>
   )
