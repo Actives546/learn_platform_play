@@ -14,6 +14,7 @@
         <module>learn-common</module>
         <module>learn-gateway</module>
         <module>learn-auth</module>
+        <module>learn-user</module>
     </modules>
 
     <properties>
