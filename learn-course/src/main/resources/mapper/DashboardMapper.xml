@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.learn.course.mapper.DashboardMapper">
+
+    <select id="countStudents" resultType="long">
+        SELECT COUNT(*)
+        FROM user
+        WHERE role_id = 3
+    </select>
+
+    <select id="countTeachers" resultType="long">
+        SELECT COUNT(DISTINCT teacher_id)
+        FROM course
+        WHERE is_deleted = 0
+        AND teacher_id IS NOT NULL
+    </select>
+
+    <select id="countTotalCourses" resultType="long">
+        SELECT COUNT(*)
+        FROM course
+        WHERE is_deleted = 0
+    </select>
+
+    <select id="countPublishedCourses" resultType="long">
+        SELECT COUNT(*)
+        FROM course
+        WHERE is_deleted = 0
+        AND status = 1
+    </select>
+
+    <select id="countDraftCourses" resultType="long">
+        SELECT COUNT(*)
+        FROM course
+        WHERE is_deleted = 0
+        AND status = 0
+    </select>
+
+    <select id="countOfflineCourses" resultType="long">
+        SELECT COUNT(*)
+        FROM course
+        WHERE is_deleted = 0
+        AND status = 2
+    </select>
+
+    <select id="countThisMonthNewCourses" resultType="long">
+        SELECT COUNT(*)
+        FROM course
+        WHERE is_deleted = 0
+        AND YEAR(create_time) = YEAR(CURRENT_DATE())
+        AND MONTH(create_time) = MONTH(CURRENT_DATE())
+    </select>
+
+    <select id="countPublishedChapters" resultType="long">
+        SELECT COUNT(*)
+        FROM chapter
+        WHERE is_deleted = 0
+    </select>
+
+</mapper>
