@@ -378,7 +378,8 @@ const MenuManagementPage = () => {
         菜单管理
       </h2>
 
-      <Card>
+      <Card style={{ maxHeight: 'calc(100vh - 140px)' }}>
+        <div style={{ overflow: 'auto', height: 'calc(100% - 56px)' }}>
         <Form
           form={searchForm}
           layout="inline"
@@ -435,8 +436,9 @@ const MenuManagementPage = () => {
           rowKey="id"
           loading={loading}
           pagination={false}
-          scroll={{ x: 1200 }}
+          scroll={{ x: 1200, y: 'calc(100vh - 340px)' }}
         />
+        </div>
       </Card>
 
       <Modal

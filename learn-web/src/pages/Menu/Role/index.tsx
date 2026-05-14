@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Card,
   List,
@@ -45,7 +45,7 @@ const RoleManagementPage = () => {
   const [roleList, setRoleList] = useState<Role[]>([])
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
   const [treeData, setTreeData] = useState<any[]>([])
-  const [checkedKeys, setCheckedKeys] = useState<number[]>([])
+  const [checkedKeys, setCheckedKeys] = useState<React.Key[]>([])
   const [roleLoading, setRoleLoading] = useState(false)
   const [menuLoading, setMenuLoading] = useState(false)
   const [grantLoading, setGrantLoading] = useState(false)
@@ -53,23 +53,47 @@ const RoleManagementPage = () => {
   const [modalTitle, setModalTitle] = useState('新增角色')
   const [editingRole, setEditingRole] = useState<Role | null>(null)
   const [form] = Form.useForm()
+  const hasInitRef = useRef(false)
 
-  const fetchRoleList = async () => {
-    setRoleLoading(true)
-    try {
-      const res = await getRoleList()
-      if (res.code === 200 && res.data) {
-        setRoleList(res.data)
-        if (!selectedRole && res.data.length > 0) {
-          setSelectedRole(res.data[0])
+  const buildTreeData = (menus: Menu[]) => {
+    const nodeMap = new Map<number, any>()
+
+    // 先创建所有节点
+    menus.forEach(menu => {
+      nodeMap.set(menu.id, {
+        key: menu.id,
+        title: (
+          <span>
+            <UnorderedListOutlined style={{ marginRight: 8 }} />
+            {menu.menuName}
+            {menu.menuType === 1 && <Tag color="blue" style={{ marginLeft: 8 }}>目录</Tag>}
+            {menu.menuType === 2 && <Tag color="green" style={{ marginLeft: 8 }}>菜单</Tag>}
+            {menu.menuType === 3 && <Tag color="orange" style={{ marginLeft: 8 }}>按钮</Tag>}
+            {menu.status === 0 && <Tag color="red" style={{ marginLeft: 8 }}>禁用</Tag>}
+          </span>
+        ),
+        disabled: menu.status === 0,
+        children: [],
+      })
+    })
+
+    // 再按 parentId 组装树
+    const roots: any[] = []
+    menus.forEach(menu => {
+      const node = nodeMap.get(menu.id)!
+      if (menu.parentId === 0) {
+        roots.push(node)
+      } else {
+        const parent = nodeMap.get(menu.parentId)
+        if (parent) {
+          parent.children.push(node)
+        } else {
+          roots.push(node)
         }
       }
-    } catch (error) {
-      console.error('获取角色列表失败:', error)
-      message.error('获取角色列表失败')
-    } finally {
-      setRoleLoading(false)
-    }
+    })
+
+    setTreeData(roots)
   }
 
   const fetchMenuList = async () => {
@@ -92,6 +116,8 @@ const RoleManagementPage = () => {
       const res = await getRoleMenuIds(roleId)
       if (res.code === 200 && res.data) {
         setCheckedKeys(res.data)
+      } else {
+        setCheckedKeys([])
       }
     } catch (error) {
       console.error('获取角色菜单ID失败:', error)
@@ -99,55 +125,51 @@ const RoleManagementPage = () => {
     }
   }
 
-  const buildTreeData = (menus: Menu[]) => {
-    const childrenMap = new Map<number, any[]>()
-    menus.forEach(menu => {
-      const node = {
-        key: menu.id,
-        title: (
-          <span>
-            <UnorderedListOutlined style={{ marginRight: 8 }} />
-            {menu.menuName}
-            {menu.menuType === 1 && <Tag color="blue" style={{ marginLeft: 8 }}>目录</Tag>}
-            {menu.menuType === 2 && <Tag color="green" style={{ marginLeft: 8 }}>菜单</Tag>}
-            {menu.menuType === 3 && <Tag color="orange" style={{ marginLeft: 8 }}>按钮</Tag>}
-            {menu.status === 0 && <Tag color="red" style={{ marginLeft: 8 }}>禁用</Tag>}
-          </span>
-        ),
-        disabled: menu.status === 0,
-        children: [],
+  const fetchRoleList = async () => {
+    setRoleLoading(true)
+    try {
+      const res = await getRoleList()
+      if (res.code === 200 && res.data) {
+        setRoleList(res.data)
+        // 数据加载完成后自动选中第一个角色
+        if (res.data.length > 0) {
+          setSelectedRole(res.data[0])
+        }
       }
-      if (!childrenMap.has(menu.parentId)) {
-        childrenMap.set(menu.parentId, [])
-      }
-      childrenMap.get(menu.parentId)!.push(node)
-    })
-
-    const buildTree = (parentId: number): any[] => {
-      const children = childrenMap.get(parentId) || []
-      return children.map(child => ({
-        ...child,
-        children: buildTree(child.key),
-      }))
+    } catch (error) {
+      console.error('获取角色列表失败:', error)
+      message.error('获取角色列表失败')
+    } finally {
+      setRoleLoading(false)
     }
-
-    const result = buildTree(0)
-    setTreeData(result)
   }
+
+  // 只执行一次的初始化加载
+  useEffect(() => {
+    if (hasInitRef.current) return
+    hasInitRef.current = true
+    fetchMenuList()
+    fetchRoleList()
+  }, [])
+
+  // selectedRole 变化时加载其关联的菜单权限
+  const selectedRoleId = selectedRole?.id
+
+  useEffect(() => {
+    if (selectedRoleId) {
+      fetchRoleMenuIds(selectedRoleId)
+    }
+  }, [selectedRoleId])
 
   const handleRoleSelect = (role: Role) => {
-    setSelectedRole(role)
-    if (role) {
-      fetchRoleMenuIds(role.id)
+    if (selectedRole?.id !== role.id) {
+      setSelectedRole(role)
     }
   }
 
-  const handleCheck = (checkedKeysValue: any) => {
-    if (checkedKeysValue.checked) {
-      setCheckedKeys(checkedKeysValue.checked)
-    } else {
-      setCheckedKeys(checkedKeysValue)
-    }
+  const handleCheck = (checkedKeysValue: any, _info: any) => {
+    const keys = Array.isArray(checkedKeysValue) ? checkedKeysValue : checkedKeysValue.checked
+    setCheckedKeys(keys || [])
   }
 
   const handleGrantMenus = async () => {
@@ -157,7 +179,8 @@ const RoleManagementPage = () => {
     }
     setGrantLoading(true)
     try {
-      const res = await grantMenus(selectedRole.id, checkedKeys)
+      const menuIds = checkedKeys.map(key => Number(key))
+      const res = await grantMenus(selectedRole.id, menuIds)
       if (res.code === 200) {
         message.success('授权成功')
       }
@@ -237,17 +260,6 @@ const RoleManagementPage = () => {
     }
   }
 
-  useEffect(() => {
-    fetchRoleList()
-    fetchMenuList()
-  }, [])
-
-  useEffect(() => {
-    if (selectedRole) {
-      fetchRoleMenuIds(selectedRole.id)
-    }
-  }, [selectedRole?.id])
-
   const getStatusColor = (status: number) => {
     return status === 1 ? 'success' : 'default'
   }
@@ -275,7 +287,8 @@ const RoleManagementPage = () => {
               />
             </Space>
           }
-          style={{ width: 300, flexShrink: 0 }}
+          style={{ width: 300, flexShrink: 0, maxHeight: 'calc(100vh - 160px)' }}
+          bodyStyle={{ overflow: 'auto', padding: 0 }}
           extra={
             <Button
               type="primary"
@@ -288,6 +301,7 @@ const RoleManagementPage = () => {
           }
         >
           <Spin spinning={roleLoading}>
+            <div style={{ padding: 16 }}>
             <List
               dataSource={roleList}
               locale={{ emptyText: '暂无角色数据' }}
@@ -361,6 +375,7 @@ const RoleManagementPage = () => {
                 </List.Item>
               )}
             />
+            </div>
           </Spin>
         </Card>
 
@@ -373,7 +388,8 @@ const RoleManagementPage = () => {
               )}
             </Space>
           }
-          style={{ flex: 1 }}
+          style={{ flex: 1, maxHeight: 'calc(100vh - 160px)' }}
+          bodyStyle={{ overflow: 'auto', padding: 0 }}
           extra={
             <Button
               type="primary"
@@ -388,7 +404,7 @@ const RoleManagementPage = () => {
         >
           <Spin spinning={menuLoading}>
             {selectedRole ? (
-              <div>
+              <div style={{ padding: 16, maxHeight: 'calc(100vh - 260px)', overflow: 'auto' }}>
                 <div style={{ marginBottom: 16, padding: 12, backgroundColor: '#fafafa', borderRadius: 6 }}>
                   <Space>
                     <span style={{ color: '#666' }}>当前角色:</span>
@@ -398,15 +414,21 @@ const RoleManagementPage = () => {
                     <Tag color="green">{checkedKeys.length} 个菜单</Tag>
                   </Space>
                 </div>
-                <Tree
-                  checkable
-                  defaultExpandAll
-                  checkedKeys={checkedKeys}
-                  onCheck={handleCheck}
-                  treeData={treeData}
-                  height={500}
-                  className="menu-tree"
-                />
+                {treeData.length > 0 ? (
+                  <Tree
+                    checkable
+                    checkedKeys={checkedKeys}
+                    defaultExpandAll
+                    onCheck={handleCheck}
+                    treeData={treeData}
+                    className="menu-tree"
+                    checkStrictly
+                  />
+                ) : (
+                  <div style={{ textAlign: 'center', padding: 50, color: '#999' }}>
+                    <div>菜单数据加载中...</div>
+                  </div>
+                )}
               </div>
             ) : (
               <div style={{ textAlign: 'center', padding: 100, color: '#999' }}>
